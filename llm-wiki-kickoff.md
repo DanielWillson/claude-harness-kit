@@ -158,6 +158,33 @@ Decide up front who can change the wiki and what the check is:
   for it if the domain demands it. Don't half-build the heavy version for a light
   project.
 
+### 2.9 One claim, one home — guard cross-page drift
+Reconcile (§2.1) checks each page against its **code**, never against **other pages**.
+So a claim *restated* in two pages can drift: each stays "correct against its own code,"
+yet they contradict each other and the linter passes both. (Real case: a runbook
+paraphrased a stale *derived* doc and contradicted the page that cited the *primary*
+source — both green.) Three cheap layers, no embeddings:
+- **Prevent (load-bearing):** a finding/decision's conclusion lives on **one** page —
+  the one whose `code:` ties to its evidence. Other pages **link `[[it]]` + a one-line
+  upshot; never re-derive the reasoning.** A paraphrase drifts; a link forces re-reading
+  the source. And **cite the primary source, not a derived summary** (a test *result*
+  over a *recommendation* about it — the derived doc goes stale first); put the source
+  doc — even a non-code `.md` — in the page's `code:` so reconcile flags it on change.
+- **Detect (deterministic, ~free):** have `reconcile` print each flagged page's
+  **linked-but-unflagged neighbours** ("also re-read for consistency"). The wikilink
+  graph is already computed; a link is a deliberate claim of coherence, so this is
+  near-zero-false-positive — and, unlike lexical/shingle matching, it still fires after
+  one copy has fully inverted (the contradiction is *structural*, not lexical).
+- **Judge (LLM, in the maintenance pass):** when a flagged page surfaces a linked
+  neighbour, co-read both against their `code:` sources and fix any
+  same-claim/opposite-verdict contradiction — judged against the code, never
+  wiki-internal consistency (§2.1 still holds).
+
+Resist the tempting fourth layer — an n-gram/shingle "duplicate-paragraph" linter. It
+only nudges at *creation* time and **fails once a copy inverts** (lexical distance
+grows), and a noisy version becomes the check everyone ignores. The convention prevents,
+the link-graph detects, the LLM judges.
+
 ---
 
 ## 3. Structure
@@ -219,7 +246,9 @@ their place:
 - **`reconcile [range] [--diff]`** — pages whose `code:` files changed, both
   **committed** since the last run *and* **uncommitted** (see the boxed note).
   `--diff` prints the actual diff hunks per file so the agent edits with the change
-  in hand (don't make it re-derive what changed).
+  in hand (don't make it re-derive what changed). **Also surfaces each flagged page's
+  linked-but-unflagged neighbours** (§2.9) — the cross-page consistency net — so a
+  shared claim's *other* home gets a look even when its own `code:` didn't change.
 - **`stale`** — pages whose `updated` predates the last *commit* touching their
   `code:`, plus pages with *uncommitted* edits to their `code:`.
 - **`coverage`** — source files (in the code dirs) not in any page's `code:` —
@@ -247,8 +276,10 @@ their place:
 Two triggers:
 - **Automatic (the engine):** fold a wiki pass into whatever already runs
   unattended (a daily scheduled session, a CI step): `reconcile --diff` → edit
-  flagged pages → `lint`/`stale`/`coverage`/`gaps` and fix → a **rotating
-  completeness spot-check** (read the 1–2 oldest-`updated` pages against their
+  flagged pages → **judge cross-page consistency** on the linked-neighbour pairs
+  reconcile surfaced (§2.9: co-read both against their `code:`, fix any
+  same-claim/opposite-verdict drift) → `lint`/`stale`/`coverage`/`gaps` and fix → a
+  **rotating completeness spot-check** (read the 1–2 oldest-`updated` pages against their
   `code:`; stub a page for any load-bearing undocumented source; resolve a `gaps`
   item) → `index` → append a `## [date] reconcile | …` line to `log.md` → a
   **scoped commit** of the wiki dir (§2.7). The completeness spot-check is the
@@ -338,6 +369,16 @@ usage/docstring, the SCHEMA maintenance table, and the command/audit prose.
   flags its page, but maybe the part the page documents didn't change. Treat a flag
   as "review," not "rewrite"; confirm against the diff, then refresh `updated` or
   edit as warranted.
+- **Two pages can each be "correct against their code" yet contradict each other.**
+  Reconcile checks page-vs-code, never page-vs-page — so a claim *restated* in a
+  second page drifts undetected, and lint passes both. It actually happened: one page
+  paraphrased a stale *derived* doc (a recommendation) and flatly contradicted the
+  page that cited the *primary* source (the result it was based on); both were green
+  for days. The fix is §2.9 — state a claim **once** and link to it (don't restate),
+  cite the **primary** source not a derived summary, and put that source doc in the
+  page's `code:` so reconcile flags it. Detect the residue with reconcile's
+  linked-neighbour surfacing; don't reach for a shingle/duplicate-text linter (it
+  fails the moment one copy inverts).
 - **Linter gotchas:** frontmatter-exempt pages (log/backlog/schema) must still be
   *valid wikilink targets* (other pages link to them); and strip `code spans`
   before scanning for links *or* markers, so a page documenting the syntax isn't
