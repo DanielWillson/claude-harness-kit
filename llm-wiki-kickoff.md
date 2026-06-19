@@ -62,12 +62,14 @@ it travels with the repo*:
   in the repo. Holds invariants/guardrails + pointers into the wiki. Keep it lean.
 - **Wiki** — **read-on-demand** (only if the agent follows a pointer), in the repo,
   versioned, shared, reconcile-checked. Holds the depth, history, rationale.
-- **Harness memory store** (e.g. `~/.claude` auto-memory) — machine-local, *not in
-  the repo*, not shared, not versioned, not reconciled. **It is the wrong home for
-  project knowledge.** Keep only user-level/cross-project facts there (working
-  style, preferences). If a project's knowledge is trapped in the machine-local
-  store, migrate it into the repo (wiki for depth, contract for invariants) and
-  leave behind at most a one-line pointer.
+- **Harness memory store** (`~/.claude` — both the **project-scoped** auto-memory *and* the
+  **global / user** `~/.claude/CLAUDE.md`) — machine-local, *not in the repo*, not shared,
+  not versioned, not reconciled. **It is the wrong home for project knowledge**, and the
+  **global layer is the worst**: a project-specific fact there loads into every *other*
+  project and pollutes it. Keep only **user-level** facts in memory (working style,
+  preferences); the global layer takes cross-project user prefs only, never anything
+  project-specific. If project knowledge is trapped in the store, migrate it into the repo
+  (wiki for depth, contract for invariants) and leave behind at most a one-line pointer.
 
 These are the *memory* layers. A fourth, non-memory layer — the **audit** (a grep script,
 kickoff §1.6) — *enforces* invariants rather than storing knowledge. The full routing
@@ -355,7 +357,9 @@ usage/docstring, the SCHEMA maintenance table, and the command/audit prose.
   which are in the repo, versioned, shared, or reconciled. *The signal to scaffold:* the
   store is accreting *project-specific* knowledge (how a subsystem works, what failed, why
   a decision was made). Migrate it into the wiki (depth/history) or the contract
-  (invariants), leaving a one-line pointer; keep only *user-level* prefs there.
+  (invariants), leaving a one-line pointer; keep only *user-level* prefs there — and never
+  a project-specific fact in the **global** `~/.claude/CLAUDE.md`, which would pollute every
+  other project.
 - **Critical mass is real.** Value compounds over weeks; early sessions feel like
   overhead. Don't judge it by the first run.
 

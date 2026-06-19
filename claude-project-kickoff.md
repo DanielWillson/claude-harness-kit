@@ -298,13 +298,15 @@ the *same set* you put in `denyWrite` §1.3; they belong in both places).
 # <Project Name>
 
 ## Knowledge & memory — how this project remembers (READ FIRST, every session)
-- **Lean on the repo, NOT machine-local memory.** Project knowledge — how a subsystem
-  works, what you tried that failed, why a decision was made — lives in the **repo**: the
-  **wiki** for depth, **this file** for invariants, **commit bodies** for point-in-time why.
-  Do **NOT** stash project facts in the harness's machine-local store (`~/.claude`
-  auto-memory): it isn't versioned, shared across machines, or reconciled against the code,
-  so the next session won't have it and it silently rots. Machine-local memory is for
-  *user-level* preferences only (working style, tone) — never how-this-project-works facts.
+- **Project knowledge goes in the repo — NEVER in memory. Default to the wiki.** How a
+  subsystem works, what you tried that failed, why a decision was made → the **wiki** (depth),
+  **this file** (invariants), **commit bodies** (point-in-time why). Do **NOT** write any
+  project-specific fact to the harness memory store — and **especially not to global / user
+  memory** (`~/.claude/CLAUDE.md` or the cross-project auto-memory), where a fact about *this*
+  project loads into *every other* project and pollutes it. The project-scoped local store is
+  the wrong home too (not versioned, shared, or reconciled — it silently rots). Memory is for
+  **user-level working style only** (preferences, tone), never how-a-project-works facts. When
+  unsure where something belongs, it goes in the wiki.
 - **Read the wiki before you work** *(once one exists — see the wiki guide)*. Before
   touching a subsystem or re-deriving how/why something works, read `wiki/index.md` + the
   relevant page; the answer — and the dead ends already walked — is likely there.
@@ -531,11 +533,12 @@ history), it goes in the wiki, **not** `CLAUDE.md`.
   messages are point-in-time and not browsable during active development.
 - Skipping documentation because the code "speaks for itself" — it speaks for
   what, not why, and future sessions start cold.
-- **Trapping project knowledge in a machine-local agent-memory store** (e.g. the
-  harness's `~/.claude` auto-memory). It isn't in the repo — not shared, not
-  versioned, not reconciled against the code. Keep project knowledge in the repo
-  (contract + wiki); reserve the machine-local store for *user-level* preferences
-  (working style), not how-the-project-works facts.
+- **Trapping project knowledge in a machine-local agent-memory store** (the harness's
+  `~/.claude` auto-memory) — and *worst of all* in **global / user memory**
+  (`~/.claude/CLAUDE.md`), where a project-specific fact leaks into every other project. None
+  of it is in the repo, shared, versioned, or reconciled. Keep project knowledge in the repo
+  (contract + wiki); memory holds *user-level* working style only, never how-the-project-works
+  facts. Default any project fact to the wiki.
 
 ### Principle 3 — Explain Reasoning While Building
 Narrate the *how* and *why* of non-trivial choices so the user learns.

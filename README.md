@@ -30,7 +30,9 @@ lean `CLAUDE.md` + wiki, never this kit.
 - **Self-improving knowledge** — the wiki (and the project README) reconcile against the
   code, so docs can't silently rot.
 - **Lean on the repo, not machine-local memory** — project knowledge lives in the repo (wiki
-  + `CLAUDE.md` + commit bodies); machine-local memory is for user-level preferences only.
+  + `CLAUDE.md` + commit bodies); memory is for user-level preferences only, and a
+  project-specific fact never goes in global `~/.claude/CLAUDE.md` (it would pollute every
+  other project). Default any project fact to the wiki.
 - **Scaffolding vs. artifacts** — the kit is used once; only its outputs persist (the audit
   even warns if a kit source file gets committed into a project).
 
