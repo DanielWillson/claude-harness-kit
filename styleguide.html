@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PML Style Guide</title>
+  <style>
+    /*
+     * ── PML Design Tokens ───────────────────────────────────────────────────
+     * Warm cream palette — use only these values in new CSS.
+     * Never use generic grays (#111, #333, #555, #888, #aaa, #ccc, #e0e0e0,
+     * #f5f5f5, #fafafa, #f0f0f0, #ebebeb, #e8e8e8) in light-mode rules.
+     * #fff is only valid as text on a dark active button — never as a bg.
+     *
+     * Light mode                        Dark mode
+     *   #f5f0eb  page bg                  #e0ddd8  active filter bg
+     *   #1a1714  primary text / active    #1a1714  text on dark active btn
+     *   #c0392b  red accent               #776e68  muted text
+     *   #ede8e2  secondary bg / art ph    #252525  card borders
+     *   #e8e2dc  card & section borders
+     *   #d8d8d8  filter button borders
+     *   #9e9690  muted text (labels)
+     *   #b0a89e  lighter muted (timestamps, section headers)
+     *   #c0b8b0  art placeholder icon
+     *   #faf8f5  input background
+     *   rgba(26,23,20,.025)  row / card hover bg
+     *   rgba(26,23,20,.04)   button hover bg
+     */
+
+    /* Font note: PML uses Proxima Nova. This standalone uses system fonts. */
+    html { font-size: 17px; }
+    *, *::before, *::after { box-sizing: border-box; }
+    body   { margin: 0; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+             background: #f5f0eb; color: #1a1714; }
+    a      { color: inherit; }
+
+    /* ── Header ── */
+    .pml-header { position: sticky; top: 0; z-index: 100; background: #f5f0eb;
+                  border-bottom: 1px solid rgba(0,0,0,.08); padding: 0 1.5rem;
+                  height: 50px; display: flex; align-items: center; }
+    .pml-logo   { font-weight: 800; font-size: 1.05rem; letter-spacing: .04em;
+                  text-decoration: none; color: #1a1714; flex-shrink: 0; }
+    .pml-header-end { display: flex; align-items: center; gap: .6rem; margin-left: auto; }
+    .pml-pal    { font-size: .8rem; color: #b0a89e; }
+    .pml-theme-btn { background: none; border: none; cursor: pointer;
+                     color: #b0a89e; padding: .1rem; line-height: 1; flex-shrink: 0;
+                     display: inline-flex; align-items: center; }
+    .pml-theme-btn:hover { color: #1a1714; }
+    .pml-quality-btn { background: none; border: 1.5px solid currentColor; border-radius: 4px;
+                       cursor: pointer; padding: .12rem .42rem; line-height: 1; flex-shrink: 0;
+                       font-size: .68rem; font-weight: 700; letter-spacing: .06em; }
+    .pml-quality-on  { color: #1a1714; }
+    .pml-quality-off { color: #b8b0a6; }
+    .pml-quality-btn:hover { color: #6b6460; }
+
+    /* ── Gear icon ── */
+    .pml-gear-btn { background: none; border: none; cursor: pointer; padding: .2rem .35rem;
+                    color: #b0a89e; font-size: 1.4rem; line-height: 1; text-decoration: none;
+                    display: inline-flex; align-items: center; }
+    .pml-gear-btn:hover { color: #6b6460; }
+
+    /* ── Content wrapper ── */
+    .pml-main { max-width: 860px; margin: 0 auto; padding: 1.5rem; }
+
+    /* ── Warning banner ── */
+    .pml-warn { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 6px;
+                padding: .65rem 1rem; margin-bottom: 1.25rem; font-size: .875rem; color: #92400e; }
+
+    /* ── Shared utilities ── */
+    .muted     { color: #9e9690; }
+    .truncate  { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* ── Pal dot avatars ── */
+    .pal-dot-list { display: inline-flex; align-items: center; gap: .2rem; flex-wrap: wrap; }
+    .pal-dot      { width: 1.25rem; height: 1.25rem; border-radius: 50%; font-size: .6rem;
+                    font-weight: 700; display: inline-flex; align-items: center;
+                    justify-content: center; text-transform: uppercase; color: #fff;
+                    flex-shrink: 0; cursor: default; opacity: 1; }
+
+    /* ── Dark mode ── */
+    html.dark body   { background: #141210; color: #e0ddd8; }
+    html.dark .pml-header { background: #141210; border-color: #2a2520; }
+    html.dark .pml-logo   { color: #e0ddd8; }
+    html.dark .pml-gear-btn { color: #776e68; }
+    html.dark .pml-gear-btn:hover { color: #e0ddd8; }
+    html.dark .pml-theme-btn { color: #776e68; }
+    html.dark .pml-theme-btn:hover { color: #e0ddd8; }
+    html.dark .pml-quality-on  { color: #e0ddd8; }
+    html.dark .pml-quality-off { color: #776e68; }
+    html.dark .pml-quality-btn:hover { color: #e0ddd8; }
+    html.dark .pml-warn { background: #1c1400; border-color: #5a4200; color: #cc9900; }
+    html.dark .muted { color: #776e68; }
+
+    /* ── Favorite buttons ── */
+    .pml-fav-btn { background: none; border: none; cursor: pointer;
+                   -webkit-appearance: none; appearance: none;
+                   padding: 2px 3px; line-height: 1.2; font-size: 1rem;
+                   color: #c0b8b0; flex-shrink: 0; outline: none; }
+    .pml-fav-btn:hover { color: #e05; }
+    .pml-fav-btn--active { color: #e05 !important; }
+    html.dark .pml-fav-btn { color: #444; }
+    html.dark .pml-fav-btn:hover { color: #ff4466; }
+    html.dark .pml-fav-btn--active { color: #ff4466 !important; }
+
+    /* ── Album grid overlay convention ── */
+    .alb-grid-fav {
+      position: absolute; top: .4rem; left: .4rem;
+      background: none; border: none; cursor: pointer; padding: .4rem; outline: none;
+      font-size: 1.7rem; line-height: 1; z-index: 1;
+      color: rgba(255,255,255,.9) !important;
+      text-shadow: 0 1px 4px rgba(0,0,0,.55);
+    }
+    .alb-grid-fav.pml-fav-btn--active { color: #e05 !important; }
+    .alb-grid-play {
+      position: absolute; top: .4rem; right: .4rem;
+      background: rgba(0,0,0,.52); border: none; border-radius: 50%;
+      width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+      color: #fff; cursor: pointer; font-size: .8rem; line-height: 1;
+      opacity: 0; transition: opacity .15s; z-index: 1; padding: 0;
+    }
+
+    /* ── Canonical album rows (list view) ── */
+    .album      { border-top: 1px solid rgba(26,23,20,.06); }
+    .album:last-child { border-bottom: 1px solid rgba(26,23,20,.06); }
+    .album-hdr  { display: flex; align-items: flex-start; gap: 1rem; padding: .875rem;
+                  cursor: pointer; user-select: none; touch-action: manipulation;
+                  transition: background .1s; }
+    .album-hdr:hover { background: rgba(26,23,20,.04); }
+    .art-wrap   { position: relative; flex-shrink: 0; }
+    .art        { width: 44px; height: 44px; border-radius: 8px; object-fit: cover;
+                  flex-shrink: 0; display: block; background: #ede8e2; }
+    .art-ph     { width: 44px; height: 44px; border-radius: 8px;
+                  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+                  color: rgba(0,0,0,.42); font-size: .82rem; font-weight: 700;
+                  letter-spacing: .02em; }
+    .art-wrap .alb-play-btn {
+      position: absolute; inset: 0; border: none; border-radius: 8px; cursor: pointer;
+      background: rgba(0,0,0,.44); color: #fff; font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity .15s; }
+    .art-wrap:hover .alb-play-btn { opacity: 1; }
+    .alb-play-btn { background: #faf8f5; border: 1px solid #e0d8d0; border-radius: 50%;
+                    color: #9e9690; cursor: pointer; font-size: .85rem; line-height: 1;
+                    width: 36px; height: 36px; flex-shrink: 0;
+                    display: flex; align-items: center; justify-content: center;
+                    transition: background .12s, border-color .12s, color .12s; }
+    .alb-play-btn:hover { background: #1a1714; border-color: #1a1714; color: #fff; }
+    .alb-info   { flex: 1; min-width: 0; }
+    .alb-name-row { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; }
+    .alb-name-row .alb-name { flex: 1; min-width: 0; }
+    .alb-name   { font-size: 1.05rem; font-weight: 700; line-height: 1.3; }
+    .alb-name a { text-decoration: none; color: inherit; }
+    .alb-name a:hover { text-decoration: underline; text-underline-offset: 2px; }
+    .alb-name-row .pml-fav-btn { font-size: 1.15rem; padding: 0; flex-shrink: 0; margin-top: .05rem;
+                                  color: #c0b8b0; background: none; border: none; cursor: pointer; }
+    .alb-name-row .pml-fav-btn.pml-fav-btn--active { color: #c0392b; }
+    .art-name-hdr { display: flex; align-items: center; gap: .4rem; }
+    .art-name-hdr .pml-fav-btn { font-size: 1.05rem; padding: 0; flex-shrink: 0;
+                                  color: #c0b8b0; background: none; border: none; cursor: pointer; }
+    .art-name-hdr .pml-fav-btn.pml-fav-btn--active { color: #c0392b; }
+    .alb-meta-row { display: flex; align-items: center; flex-wrap: wrap; gap: .35rem; margin-top: .3rem; }
+    .alb-genre-chip { background: rgba(26,23,20,.07); border-radius: 4px; padding: .1rem .44rem;
+                      font-size: .72rem; font-weight: 500; color: #5c524c; white-space: nowrap; }
+    .alb-artist-year { font-size: .82rem; color: #9e9690; }
+    .alb-artist-year a { color: inherit; text-decoration: none; }
+    .alb-artist-year a:hover { text-decoration: underline; text-underline-offset: 2px; }
+    .alb-sentence { font-size: .875rem; color: #3d3530; margin-top: .38rem; line-height: 1.5; }
+    .alb-contrib-row { display: flex; align-items: center; gap: .4rem; margin-top: .5rem;
+                       font-size: .78rem; color: #9e9690; }
+    .alb-contrib-label { color: #b0a89e; flex-shrink: 0; }
+    .alb-contrib-row .pal-dot { width: 1.3rem; height: 1.3rem; font-size: .52rem; flex-shrink: 0; }
+    .alb-contrib-row a { color: inherit; text-decoration: none; }
+    .alb-contrib-row a:hover { text-decoration: underline; text-underline-offset: 2px; }
+    .alb-artist { font-size: .8rem; color: #9e9690; margin-top: .1rem; }
+    .alb-contrib { font-size: .72rem; color: #c0b8b0; font-style: italic; }
+    .alb-right  { text-align: right; font-size: .78rem; color: #b0a89e; white-space: nowrap;
+                  display: flex; flex-direction: column; align-items: flex-end; gap: .2rem; }
+    html.dark .alb-genre-chip  { background: rgba(255,255,255,.08); color: #9e9690; }
+    html.dark .alb-sentence    { color: #b8b0a8; }
+    html.dark .alb-artist-year { color: #776e68; }
+    html.dark .alb-contrib-row { color: #776e68; }
+    html.dark .alb-contrib-label { color: #6b6460; }
+    html.dark .alb-name-row .pml-fav-btn { color: #3d3530; }
+    html.dark .alb-name-row .pml-fav-btn.pml-fav-btn--active { color: #e05; }
+    html.dark .art-name-hdr .pml-fav-btn { color: #3d3530; }
+    html.dark .art-name-hdr .pml-fav-btn.pml-fav-btn--active { color: #e05; }
+
+    /* Track table */
+    .pml-play-btn { background: none; border: none; cursor: pointer;
+                    font-size: .85rem; padding: 0; line-height: 1; }
+    .pml-atq-btn { background: none; border: none; cursor: pointer; padding: 2px 3px;
+                   line-height: 1; font-size: .75rem; color: #b0a89e; flex-shrink: 0;
+                   outline: none; display: inline-flex; align-items: center; }
+    .pml-atq-btn:hover { color: #1a1714 !important; }
+    html.dark .pml-atq-btn { color: #776e68; }
+    html.dark .pml-atq-btn:hover { color: #e0ddd8 !important; }
+    .tracks     { display: none; width: 100%; border-collapse: collapse;
+                  border-top: 1px solid rgba(26,23,20,.06); }
+    .tracks.open { display: table; }
+    .tracks td  { padding: .38rem .875rem; font-size: .85rem; }
+    .tracks tr:not(:first-child) td { border-top: 1px solid rgba(26,23,20,.04); }
+    .tracks tr:hover td { background: rgba(26,23,20,.025); }
+    .tracks tr  { cursor: pointer; }
+    .td-num     { color: #c8c0b8; width: 2.25rem; text-align: right; padding-right: .5rem; }
+    .td-dur     { color: #b0a89e; text-align: right; white-space: nowrap; width: 3.5rem; font-size: .8rem; }
+    .td-contrib { color: #b0a89e; text-align: right; white-space: nowrap; width: 5rem;
+                  font-size: .78rem; }
+    .td-play    { width: 2rem; text-align: center; }
+    .art-row-hdr .pml-fav-btn { font-size: 1.8rem; padding: 0; }
+
+    /* ── Canonical artist rows ── */
+    .art-row      { border-top: 1px solid rgba(26,23,20,.06); }
+    .art-row:last-child { border-bottom: 1px solid rgba(26,23,20,.06); }
+    .art-row-hdr  { display: flex; align-items: center; gap: .875rem; padding: .6rem .875rem;
+                    cursor: pointer; user-select: none; text-decoration: none; color: inherit; }
+    .art-row-hdr:hover { background: rgba(26,23,20,.025); }
+    .art-circle    { width: 44px; height: 44px; border-radius: 50%; object-fit: cover;
+                     flex-shrink: 0; display: block; background: #ede8e2; }
+    .art-circle-ph { width: 44px; height: 44px; border-radius: 50%; background: #ede8e2;
+                     flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+                     color: #c0b8b0; font-size: 1.3rem; }
+    .art-row-info  { flex: 1; min-width: 0; }
+    .art-row-name  { font-size: .9rem; font-weight: 600; white-space: nowrap;
+                     overflow: hidden; text-overflow: ellipsis; }
+    .art-submeta   { font-size: .78rem; color: #9e9690; margin-top: .1rem; }
+    .art-contrib-dots { display: flex; gap: .25rem; flex-shrink: 0; }
+    .art-contrib-dots .pal-dot { width: 1.3rem; height: 1.3rem; font-size: .52rem; }
+    html.dark .art-row      { border-top-color: rgba(255,255,255,.06); }
+    html.dark .art-row:last-child { border-bottom-color: rgba(255,255,255,.06); }
+    html.dark .art-row-hdr:hover { background: rgba(255,255,255,.03); }
+    html.dark .art-circle    { background: #222; }
+    html.dark .art-circle-ph { background: #222; color: #776e68; }
+    html.dark .art-submeta   { color: #776e68; }
+
+    /* ── Shared filter toolbar / grid toggle buttons ── */
+    .lib-filter-btn { padding: .45rem .8rem; border: 1.5px solid #d8d8d8; border-radius: 999px;
+                      background: transparent; color: #9e9690; font-size: .78rem; font-weight: 600;
+                      cursor: pointer; white-space: nowrap; flex-shrink: 0; letter-spacing: .02em;
+                      line-height: 1.2; box-sizing: border-box; }
+    .lib-filter-btn:hover { border-color: #9e9690; color: #1a1714; }
+    .lib-filter-btn.active { background: #1a1714; color: #fff; border-color: #1a1714; }
+    .lib-grid-btn { padding: .45rem .7rem; border: 1.5px solid #d8d8d8; border-radius: 999px;
+                    background: transparent; color: #9e9690; cursor: pointer; font-size: .82rem;
+                    line-height: 1.2; flex-shrink: 0; box-sizing: border-box; }
+    .lib-grid-btn:hover { border-color: #9e9690; color: #1a1714; }
+    .lib-grid-btn.active { background: #1a1714; color: #fff; border-color: #1a1714; }
+    html.dark .lib-filter-btn { border-color: #2a2a2a; color: #776e68; }
+    html.dark .lib-filter-btn:hover { border-color: #776e68; color: #e0ddd8; }
+    html.dark .lib-filter-btn.active { background: #e0ddd8; color: #1a1714; border-color: #e0ddd8; }
+    html.dark .lib-grid-btn { border-color: #2a2a2a; color: #776e68; }
+    html.dark .lib-grid-btn:hover { border-color: #776e68; color: #e0ddd8; }
+    html.dark .lib-grid-btn.active { background: #e0ddd8; color: #1a1714; border-color: #e0ddd8; }
+    .lib-view-btns { display: flex; gap: .3rem; }
+    .lib-view-btn { background: transparent; border: 1.5px solid #e0d8d0; border-radius: 8px;
+                    padding: .35rem .55rem; cursor: pointer; font-size: .88rem; color: #9e9690;
+                    line-height: 1; transition: background .1s, color .1s; }
+    .lib-view-btn.active { background: #1a1714; border-color: #1a1714; color: #fff; }
+    .lib-view-btn:not(.active):hover { border-color: #b0a89e; color: #5c524c; }
+    html.dark .lib-view-btn { border-color: #2a2520; color: #776e68; }
+    html.dark .lib-view-btn.active { background: #e0ddd8; border-color: #e0ddd8; color: #1a1714; }
+    html.dark .lib-view-btn:not(.active):hover { border-color: #776e68; color: #b0a89e; }
+
+    /* ── Radio button ── */
+    .alb-radio-btn { padding: .62rem 1rem; background: none; border: 1.5px solid #c8c0b8;
+                     border-radius: 999px; font-size: .88rem; font-weight: 600; cursor: pointer;
+                     color: #1a1714; display: inline-flex; align-items: center; gap: .4rem;
+                     white-space: nowrap; }
+    .alb-radio-btn:hover { border-color: #9e9690; background: rgba(26,23,20,.04); }
+    html.dark .alb-radio-btn { color: #e0ddd8; border-color: #332e28; }
+    html.dark .alb-radio-btn:hover { border-color: #776e68; background: rgba(255,255,255,.04); }
+
+    /* ── Album / artist description blurb ── */
+    .alb-desc, .art-desc { margin:.5rem 0 .75rem;font-size:.82rem;color:#6b6460;line-height:1.5;
+                            font-style:normal; }
+    .art-desc { margin-top:.3rem; }
+    .alb-genre-tag { font-style:normal;font-weight:600;color:#9e9690;text-transform:lowercase; }
+    html.dark .alb-desc, html.dark .art-desc { color:#776e68; }
+    html.dark .alb-genre-tag { color:#6b6460; }
+
+    /* ── Album blurb (list-mode rows) ── */
+    .alb-blurb { display:none; font-size:.8rem; color:#6b6460; line-height:1.5; margin-top:.35rem; }
+    html.dark .alb-blurb { color:#776e68; }
+    .alb-blurb .alb-genre-tag {
+      display:inline-block; background:rgba(158,150,144,.13); padding:.12rem .44rem;
+      border-radius:3px; font-size:.69rem; font-weight:700; color:#5c524c;
+      letter-spacing:.03em; vertical-align:.06em; font-style:normal;
+    }
+    html.dark .alb-blurb .alb-genre-tag { background:rgba(255,255,255,.08); color:#9e9690; }
+
+    /* ── Favorited-by strip & pal chips ── */
+    .alb-fav-strip { display:flex;align-items:center;gap:.5rem;font-size:.84rem;color:#6b6460;
+                     margin-bottom:.7rem; }
+    .alb-fav-strip-heart { color:#c0392b;font-size:.9rem;flex-shrink:0; }
+    .alb-fav-strip .pal-dot-list { gap:0; }
+    .alb-fav-strip .pal-dot { margin-left:-.35rem;box-shadow:0 0 0 2px #f5f0eb; }
+    .alb-fav-strip .pal-dot:first-child { margin-left:0; }
+    .alb-pal-chip { display:inline-flex;align-items:center;gap:.3rem;background:#ede8e2;
+                    border-radius:999px;padding:.22rem .6rem .22rem .22rem;font-size:.8rem;
+                    font-weight:600;color:#3d3530;text-decoration:none; }
+    a.alb-pal-chip:hover { background:#ddd8d0; }
+    .alb-pal-chip-av { width:1.2rem;height:1.2rem;font-size:.52rem;border-radius:50%;
+                       flex-shrink:0;display:inline-flex;align-items:center;justify-content:center; }
+    html.dark .alb-fav-strip { color:#776e68; }
+    html.dark .alb-fav-strip-heart { color:#e05; }
+    html.dark .alb-fav-strip .pal-dot { box-shadow:0 0 0 2px #141210; }
+    html.dark .alb-pal-chip { background:#1e1a16;color:#c0b8b0; }
+    html.dark a.alb-pal-chip:hover { background:#2a2520; }
+
+    /* ── Back link ── */
+    .pml-back { font-size: .85rem; color: #b0a89e; text-decoration: none;
+                display: inline-block; margin-bottom: 1.25rem; }
+    .pml-back:hover { color: #6b6460; }
+    html.dark .pml-back { color: #6b6460; }
+    html.dark .pml-back:hover { color: #9e9690; }
+
+    /* ── Album grid mode ── */
+    .lib-albums-wrap.grid-mode { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; }
+    .lib-albums-wrap.grid-mode .album { margin-bottom: 0; overflow: hidden; border: 1px solid #e8e2dc !important; border-radius: 8px; }
+    html.dark .lib-albums-wrap.grid-mode .album { border-color: #2a2520 !important; }
+    .lib-albums-wrap.grid-mode .album-hdr { display: flex; flex-direction: column; height: 100%; padding: 0; gap: 0; align-items: stretch; cursor: pointer; position: relative; }
+    .lib-albums-wrap.grid-mode .art,
+    .lib-albums-wrap.grid-mode .art-ph { width: 100%; height: auto; aspect-ratio: 1/1;
+      border-radius: 8px 8px 0 0; font-size: 3rem; flex-shrink: unset; }
+    .lib-albums-wrap.grid-mode .alb-info { padding: .5rem .75rem .65rem; display: flex; flex-direction: column; flex: 1; }
+    .lib-albums-wrap.grid-mode .alb-name { font-size: 1.05rem; font-weight: 700; }
+    .lib-albums-wrap.grid-mode .alb-sentence { margin-bottom: .75rem; margin-top: .6rem; font-size: .75rem; }
+    .lib-albums-wrap.grid-mode .alb-contrib-row { margin-top: auto; border-top: 1px solid rgba(26,23,20,.08); padding-top: .65rem; flex-wrap: nowrap; overflow: hidden; }
+    .lib-albums-wrap.grid-mode .alb-contrib-label { display: none; }
+    .lib-albums-wrap.grid-mode .alb-right { display: none; }
+    .lib-albums-wrap.grid-mode .tracks { display: none !important; }
+    html.dark .lib-albums-wrap.grid-mode .alb-contrib-row { border-top-color: rgba(255,255,255,.06); }
+    .lib-albums-wrap.grid-mode .alb-play-btn { position: absolute; top: .5rem; right: .4rem;
+      background: rgba(0,0,0,.55); border-color: transparent; color: #fff;
+      width: 30px; height: 30px; font-size: .8rem; opacity: .9; transition: opacity .15s, background .15s;
+      pointer-events: auto; z-index: 10; padding: 0; }
+    .lib-albums-wrap.grid-mode .album-hdr:hover .alb-play-btn { opacity: 1; background: rgba(0,0,0,.85); }
+    .lib-albums-wrap.grid-mode .pml-fav-btn { position: absolute; top: .375rem; left: .9rem;
+      font-size: 1.6rem; padding: 0; z-index: 5;
+      color: rgba(255,255,255,.9); text-shadow: 0 1px 4px rgba(0,0,0,.55); }
+    .lib-albums-wrap.grid-mode .pml-fav-btn.pml-fav-btn--active { color: #e05 !important; }
+
+    /* ── badge ── */
+    .pml-badge { width: 6px; height: 6px; border-radius: 50%; background: #c0392b;
+                 flex-shrink: 0; display: inline-block; }
+
+    /* Dark library rows */
+    html.dark .album { border-top-color: rgba(255,255,255,.06); border-bottom-color: rgba(255,255,255,.06); }
+    html.dark .album-hdr:hover { background: rgba(255,255,255,.03); }
+    html.dark .art-ph { background: #222; color: #776e68; }
+    html.dark .alb-artist { color: #776e68; }
+    html.dark .alb-right  { color: #776e68; }
+    html.dark .alb-play-btn { background: #2a2520; border-color: #2a2520; color: #9e9690; }
+    html.dark .alb-play-btn:hover { background: #e0ddd8; border-color: #e0ddd8; color: #1a1714; }
+    html.dark .tracks { border-top-color: rgba(255,255,255,.04); }
+    html.dark .tracks tr:not(:first-child) td { border-top-color: rgba(255,255,255,.03); }
+    html.dark .tracks tr:hover td { background: rgba(255,255,255,.03); }
+    html.dark .td-num, html.dark .td-dur, html.dark .td-contrib { color: #776e68; }
+
+    /* Play buttons */
+    html .pml-play-btn { color: transparent; }
+    html .pml-play-btn:hover { color: #b0a89e; }
+    html .pml-play-btn.pml-active { color: #1a1714; }
+    html.dark .pml-play-btn { color: transparent; }
+    html.dark .pml-play-btn:hover { color: #776e68; }
+    html.dark .pml-play-btn.pml-active { color: #e0ddd8; }
+
+    /* Admin primitives */
+    .checks      { list-style: none; padding: 0; margin: 0; }
+    .checks li   { display: flex; align-items: baseline; gap: .5rem; padding: .28rem 0;
+                   font-size: .875rem; border-bottom: 1px solid #e8e2dc; }
+    .checks li:last-child { border-bottom: none; }
+    .dot         { flex-shrink: 0; font-size: .65rem; }
+    .dot-ok      { color: #16a34a; }
+    .dot-warn    { color: #d97706; }
+    .dot-err     { color: #dc2626; }
+    .status-card { background: #f5f0eb; border: 1px solid #e8e2dc; border-radius: 8px;
+                   padding: .875rem 1rem; font-size: .875rem; }
+    .status-card .sc-big { font-size: 1.4rem; font-weight: 700; margin-bottom: .2rem; }
+    .status-card .sc-sub { color: #9e9690; }
+    .btn-action  { display: inline-block; padding: .55rem 1.25rem; background: #1a1714;
+                   color: #fff; border: none; border-radius: 6px; font-size: .875rem;
+                   font-weight: 600; cursor: pointer; text-decoration: none; }
+    .btn-action:disabled,
+    .btn-action.disabled { background: #c0b8b0; cursor: not-allowed; }
+    .btn-action.warn-btn { background: #d97706; }
+    .banner      { padding: .65rem 1rem; border-radius: 6px; font-size: .875rem; margin-bottom: 0; }
+    .banner-ok   { background: #f0fdf4; border: 1px solid #86efac; color: #15803d; }
+    .banner-warn { background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; }
+    .banner-err  { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
+    .code-block  { background: #ede8e2; border: 1px solid #e8e2dc; border-radius: 6px;
+                   padding: .75rem 1rem; font-family: monospace; font-size: .8rem;
+                   white-space: pre-wrap; word-break: break-all; }
+    .setup-tab   { padding: .4rem .9rem; border-radius: 6px; border: 1px solid #d8d8d8;
+                   background: #f5f0eb; color: #3d3530; font-size: .8rem; font-weight: 600;
+                   cursor: pointer; }
+    .setup-tab.active { background: #1a1714; color: #fff; border-color: #1a1714; }
+
+    /* Dark admin */
+    html.dark .checks li     { border-bottom-color: #252525; }
+    html.dark .status-card   { background: #0f0f0f; border-color: #2a2520; }
+    html.dark .status-card .sc-sub { color: #776e68; }
+    html.dark .btn-action:disabled { background: #252525; color: #776e68; }
+    html.dark .banner-ok     { background: #0a2a12; border-color: #1a5c2a; color: #5ab872; }
+    html.dark .banner-warn   { background: #2a1f00; border-color: #6b5300; color: #d4a017; }
+    html.dark .banner-err    { background: #2a0a0a; border-color: #7a2020; color: #f87171; }
+    html.dark .code-block    { background: #0f0f0f; border-color: #2a2520; color: #b0a89e; }
+    html.dark .setup-tab     { background: #252525; color: #9e9690; border-color: #2a2520; }
+    html.dark .setup-tab.active { background: #e0ddd8; color: #1a1714; border-color: #e0ddd8; }
+
+    /* ── Style guide layout ── */
+    .sg-layout  { display: grid; grid-template-columns: 148px 1fr; gap: 2.5rem; align-items: start; }
+    .sg-toc     { position: sticky; top: 66px; font-size: .8rem; line-height: 1.4; }
+    .sg-toc a   { display: block; color: #9e9690; text-decoration: none; padding: .2rem 0; }
+    .sg-toc a:hover  { color: #1a1714; }
+    .sg-toc a.active { color: #1a1714; font-weight: 600; }
+    .sg-section { margin-bottom: 3rem; }
+    .sg-h       { font-size: 1rem; font-weight: 700; margin: 0 0 1.25rem; padding-bottom: .4rem;
+                  border-bottom: 1px solid #e8e2dc; }
+    .sg-row     { display: flex; flex-wrap: wrap; gap: 1.25rem; align-items: flex-start; margin-bottom: 1rem; }
+    .sg-col     { display: flex; flex-direction: column; gap: 1.25rem; }
+    .sg-item    { display: flex; flex-direction: column; gap: .38rem; }
+    .sg-lbl     { font-size: .67rem; font-family: monospace; color: #9e9690; }
+    .sg-sep     { height: 1px; background: #e8e2dc; margin: 1.5rem 0; }
+    .sg-note    { font-size: .8rem; color: #9e9690; margin: 0; }
+
+    /* Color swatches */
+    .sg-swatches      { display: flex; flex-wrap: wrap; gap: .75rem; }
+    .sg-swatch        { display: flex; flex-direction: column; gap: .3rem; align-items: center; }
+    .sg-swatch-block  { width: 52px; height: 52px; border-radius: 8px; border: 1px solid rgba(26,23,20,.07); }
+    .sg-swatch-hex    { font-size: .63rem; font-family: monospace; color: #9e9690; text-align: center; }
+    .sg-swatch-name   { font-size: .63rem; color: #b0a89e; text-align: center; max-width: 68px; line-height: 1.3; }
+
+    /* Album list-mode size override */
+    .sg-album-list .art-wrap,
+    .sg-album-list .art,
+    .sg-album-list .art-ph { width: 88px; height: 88px; }
+
+    /* Artist grid: full-width art-wrap with centered circle */
+    .sg-artist-grid.grid-mode .art-wrap {
+      width: 100%; aspect-ratio: 1/1; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      background: #ede8e2; border-radius: 8px 8px 0 0;
+    }
+    html.dark .sg-artist-grid.grid-mode .art-wrap { background: #222; }
+    .sg-artist-grid.grid-mode .art-circle,
+    .sg-artist-grid.grid-mode .art-circle-ph { width: 58%; aspect-ratio: 1/1; font-size: 2.2rem; flex-shrink: 0; }
+
+    /* Fav button size in art-row-hdr context */
+    .sg-fav-art-ctx .pml-fav-btn { font-size: 1.8rem; padding: 0; }
+
+    /* Dark mode sg overrides */
+    html.dark .sg-toc a      { color: #776e68; }
+    html.dark .sg-toc a:hover { color: #e0ddd8; }
+    html.dark .sg-toc a.active { color: #e0ddd8; }
+    html.dark .sg-h          { border-bottom-color: #2a2520; }
+    html.dark .sg-sep        { background: #2a2520; }
+    html.dark .sg-swatch-block { border-color: rgba(255,255,255,.07); }
+    html.dark .sg-lbl        { color: #776e68; }
+    html.dark .sg-swatch-hex  { color: #776e68; }
+    html.dark .sg-swatch-name { color: #6b6460; }
+    html.dark .sg-note       { color: #776e68; }
+
+    @media (max-width: 600px) {
+      .pml-header { padding: 0 1rem; gap: .75rem; height: 46px; }
+      .pml-main   { padding: 1rem; }
+      .sg-layout { grid-template-columns: 1fr; }
+      .sg-toc    { position: static; display: flex; flex-wrap: wrap; gap: .2rem .9rem;
+                   margin-bottom: 1.75rem; }
+      .lib-albums-wrap.grid-mode { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="pml-header">
+  <span class="pml-logo">PML</span>
+  <div class="pml-header-end">
+    <span class="pml-pal">Style Guide</span>
+    <button class="pml-quality-btn pml-quality-on" title="Toggle quality">HQ</button>
+    <button class="pml-theme-btn" title="Toggle dark mode" id="dark-toggle">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <a class="pml-gear-btn" href="#">⚙</a>
+  </div>
+</header>
+
+<div class="pml-main">
+<div class="sg-layout">
+
+  <nav class="sg-toc">
+    <a href="#sg-tokens">Tokens</a>
+    <a href="#sg-type">Typography</a>
+    <a href="#sg-buttons">Buttons</a>
+    <a href="#sg-fav">Favorite</a>
+    <a href="#sg-forms">Forms</a>
+    <a href="#sg-banners">Banners</a>
+    <a href="#sg-tags">Tags</a>
+    <a href="#sg-pals">Pal Avatars</a>
+    <a href="#sg-album">Album Card</a>
+    <a href="#sg-album-grid">Album Grid</a>
+    <a href="#sg-artist">Artist Card</a>
+    <a href="#sg-artist-grid">Artist Grid</a>
+    <a href="#sg-track">Track Row</a>
+  </nav>
+
+  <div>
+
+    <!-- ── 1. Design Tokens ── -->
+    <section id="sg-tokens" class="sg-section">
+      <h2 class="sg-h">Design Tokens</h2>
+      <div class="sg-swatches">
+        <div class="sg-swatch">
+          <div class="sg-swatch-block" style="background:#f5f0eb"></div>
+          <div class="sg-swatch-hex">#f5f0eb</div>
+          <div class="sg-swatch-name">page bg</div>
+        </div>
+        <div class="sg-swatch">
+          <div class="sg-swatch-block" style="background:#1a1714"></div>
+          <div class="sg-swatch-hex">#1a1714</div>
+          <div class="sg-swatch-name">primary text</div>
+        </div>
+        <div class="sg-swatch">
+          <div class="sg-swatch-block" style="background:#c0392b"></div>
+          <div class="sg-swatch-hex">#c0392b</div>
+          <div class="sg-swatch-name">red accent</div>
+        </div>
+        <div class="sg-swatch">
+          <div class="sg-swatch-block" style="background:#ede8e2"></div>
+          <div class="sg-swatch-hex">#ede8e2</div>
+          <div class="sg-swatch-name">secondary bg / art ph</div>
+        </div>
+        <div class="sg-swatch">
+          <div class="sg-swatch-block" style="background:#e8e2dc"></div>
+          <div class="sg-swatch-hex">#e8e2dc</div>
+          <div class="sg-swatch-name">card borders</div>
+        </div>
+        <div class="sg-swatch">
+          <div class="sg-swatch-block" style="background:#d8d8d8"></div>
+          <div class="sg-swatch-hex">#d8d8d8</div>
+          <div class="sg-swatch-name">filter btn border</div>
+        </div>
+        <div class="sg-swatch">
+          <div class="sg-swatch-block" style="background:#9e9690"></div>
+          <div class="sg-swatch-hex">#9e9690</div>
+          <div class="sg-swatch-name">muted text</div>
+        </div>
+        <div class="sg-swatch">
+          <div class="sg-swatch-block" style="background:#b0a89e"></div>
+          <div class="sg-swatch-hex">#b0a89e</div>
+          <div class="sg-swatch-name">lighter muted</div>
+        </div>
+        <div class="sg-swatch">
+          <div class="sg-swatch-block" style="background:#c0b8b0"></div>
+          <div class="sg-swatch-hex">#c0b8b0</div>
+          <div class="sg-swatch-name">art ph icon</div>
+        </div>
+        <div class="sg-swatch">
+          <div class="sg-swatch-block" style="background:#faf8f5"></div>
+          <div class="sg-swatch-hex">#faf8f5</div>
+          <div class="sg-swatch-name">input bg</div>
+        </div>
+      </div>
+      <div class="sg-sep"></div>
+      <p class="sg-note">Dark: text <code>#e0ddd8</code> · bg <code>#141210</code> · muted <code>#776e68</code> · secondary bg <code>#2a2520</code> · borders <code>#2a2520</code></p>
+    </section>
+
+    <!-- ── 2. Typography ── -->
+    <section id="sg-type" class="sg-section">
+      <h2 class="sg-h">Typography</h2>
+      <div class="sg-col">
+        <div class="sg-item">
+          <div style="font-size:1.05rem;font-weight:700">Album title — 1.05rem / 700</div>
+          <div class="sg-lbl">.alb-name</div>
+        </div>
+        <div class="sg-item">
+          <div style="font-size:.9rem;font-weight:600">Artist name — .9rem / 600</div>
+          <div class="sg-lbl">.art-row-name</div>
+        </div>
+        <div class="sg-item">
+          <div style="font-size:.875rem">Body text — .875rem / 400</div>
+          <div class="sg-lbl">base prose</div>
+        </div>
+        <div class="sg-item">
+          <div class="muted" style="font-size:.875rem">Muted text — .875rem / #9e9690</div>
+          <div class="sg-lbl">.muted</div>
+        </div>
+        <div class="sg-item">
+          <div style="font-size:.82rem;color:#b0a89e">Lighter muted — .82rem / #b0a89e (timestamps, section headers)</div>
+          <div class="sg-lbl">.alb-artist-year / .td-dur</div>
+        </div>
+        <div class="sg-item">
+          <div style="font-size:.78rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#c0392b">CONTRIBUTED BY DANIEL</div>
+          <div class="sg-lbl">#pml-now-label / eyebrow labels</div>
+        </div>
+        <div class="sg-item">
+          <a href="#" class="pml-back">← Back to library</a>
+          <div class="sg-lbl">.pml-back</div>
+        </div>
+        <div class="sg-item">
+          <div class="truncate" style="max-width:220px">This very long text is truncated when it overflows the container width</div>
+          <div class="sg-lbl">.truncate</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 3. Buttons ── -->
+    <section id="sg-buttons" class="sg-section">
+      <h2 class="sg-h">Buttons</h2>
+
+      <p class="sg-lbl" style="margin:0 0 .6rem">Filter pills</p>
+      <div class="sg-row">
+        <div class="sg-item">
+          <button class="lib-filter-btn">All</button>
+          <div class="sg-lbl">.lib-filter-btn</div>
+        </div>
+        <div class="sg-item">
+          <button class="lib-filter-btn active">Jazz</button>
+          <div class="sg-lbl">.lib-filter-btn.active</div>
+        </div>
+        <div class="sg-item">
+          <button class="lib-grid-btn">⊞</button>
+          <div class="sg-lbl">.lib-grid-btn</div>
+        </div>
+        <div class="sg-item">
+          <button class="lib-grid-btn active">⊞</button>
+          <div class="sg-lbl">.lib-grid-btn.active</div>
+        </div>
+      </div>
+
+      <p class="sg-lbl" style="margin:.75rem 0 .6rem">List / grid view toggle</p>
+      <div class="sg-row">
+        <div class="sg-item">
+          <div class="lib-view-btns">
+            <button class="lib-view-btn active">≡</button>
+            <button class="lib-view-btn">⊞</button>
+          </div>
+          <div class="sg-lbl">.lib-view-btns / .lib-view-btn</div>
+        </div>
+      </div>
+
+      <p class="sg-lbl" style="margin:.75rem 0 .6rem">Outline / radio button</p>
+      <div class="sg-row">
+        <div class="sg-item">
+          <button class="alb-radio-btn">▶ Play Radio</button>
+          <div class="sg-lbl">.alb-radio-btn</div>
+        </div>
+      </div>
+
+      <p class="sg-lbl" style="margin:.75rem 0 .6rem">Action buttons (admin)</p>
+      <div class="sg-row">
+        <div class="sg-item">
+          <button class="btn-action">Rebuild Index</button>
+          <div class="sg-lbl">.btn-action</div>
+        </div>
+        <div class="sg-item">
+          <button class="btn-action" disabled>Running…</button>
+          <div class="sg-lbl">:disabled</div>
+        </div>
+        <div class="sg-item">
+          <button class="btn-action warn-btn">Delete</button>
+          <div class="sg-lbl">.warn-btn</div>
+        </div>
+      </div>
+
+      <p class="sg-lbl" style="margin:.75rem 0 .6rem">Header controls</p>
+      <div class="sg-row">
+        <div class="sg-item">
+          <button class="pml-quality-btn pml-quality-on">HQ</button>
+          <div class="sg-lbl">.pml-quality-on</div>
+        </div>
+        <div class="sg-item">
+          <button class="pml-quality-btn pml-quality-off">LQ</button>
+          <div class="sg-lbl">.pml-quality-off</div>
+        </div>
+        <div class="sg-item">
+          <button class="pml-theme-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
+          <div class="sg-lbl">.pml-theme-btn</div>
+        </div>
+        <div class="sg-item">
+          <a class="pml-gear-btn" href="#">⚙</a>
+          <div class="sg-lbl">.pml-gear-btn</div>
+        </div>
+      </div>
+
+      <p class="sg-lbl" style="margin:.75rem 0 .6rem">Setup tabs (admin)</p>
+      <div class="sg-row">
+        <div class="sg-item">
+          <div style="display:flex;gap:.5rem">
+            <button class="setup-tab active">macOS</button>
+            <button class="setup-tab">Linux</button>
+            <button class="setup-tab">Synology</button>
+          </div>
+          <div class="sg-lbl">.setup-tab / .setup-tab.active</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 4. Favorite Button ── -->
+    <section id="sg-fav" class="sg-section">
+      <h2 class="sg-h">Favorite Button</h2>
+      <div class="sg-row">
+        <div class="sg-item">
+          <button class="pml-fav-btn" onclick="pmlToggleFavorite(this)">&#9829;</button>
+          <div class="sg-lbl">.pml-fav-btn</div>
+        </div>
+        <div class="sg-item">
+          <button class="pml-fav-btn pml-fav-btn--active" onclick="pmlToggleFavorite(this)">&#9829;</button>
+          <div class="sg-lbl">.pml-fav-btn--active</div>
+        </div>
+        <div class="sg-item">
+          <div style="background:#1a1714;padding:.5rem .75rem;border-radius:8px;display:inline-flex;gap:.75rem;align-items:center">
+            <button class="pml-fav-btn" style="color:rgba(255,255,255,.3)" onclick="pmlToggleFavorite(this)">&#9829;</button>
+            <button class="pml-fav-btn pml-fav-btn--active" style="color:#ff4466!important" onclick="pmlToggleFavorite(this)">&#9829;</button>
+          </div>
+          <div class="sg-lbl">on dark player bg</div>
+        </div>
+        <div class="sg-item">
+          <div class="sg-fav-art-ctx" style="display:flex;gap:.5rem;align-items:center">
+            <button class="pml-fav-btn" onclick="pmlToggleFavorite(this)">&#9829;</button>
+            <button class="pml-fav-btn pml-fav-btn--active" onclick="pmlToggleFavorite(this)">&#9829;</button>
+          </div>
+          <div class="sg-lbl">.art-row-hdr .pml-fav-btn (1.8rem via ancestor)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 5. Form Elements ── -->
+    <section id="sg-forms" class="sg-section">
+      <h2 class="sg-h">Form Elements</h2>
+      <div class="sg-row">
+        <div class="sg-item">
+          <input type="text" value="Text input" style="padding:.5rem .75rem;border:1px solid #d8d8d8;border-radius:6px;background:#faf8f5;font-size:.875rem;font-family:inherit;width:200px">
+          <div class="sg-lbl">input[type=text]</div>
+        </div>
+        <div class="sg-item">
+          <select style="padding:.45rem .75rem;border:1px solid #d8d8d8;border-radius:6px;background:#faf8f5;font-size:.875rem;font-family:inherit">
+            <option>Option A</option>
+            <option>Option B</option>
+          </select>
+          <div class="sg-lbl">select</div>
+        </div>
+        <div class="sg-item">
+          <label style="display:flex;align-items:center;gap:.5rem;font-size:.875rem;cursor:pointer">
+            <input type="checkbox" style="width:auto;margin:0;cursor:pointer">
+            Enable feature
+          </label>
+          <div class="sg-lbl">input[type=checkbox]</div>
+        </div>
+      </div>
+      <div class="sg-row">
+        <div class="sg-item">
+          <div style="border:2px dashed #d8d8d8;border-radius:6px;padding:1.5rem 2rem;text-align:center;font-size:.875rem;color:#9e9690">
+            Drop files here or <strong style="color:#1a1714;cursor:pointer">browse</strong>
+          </div>
+          <div class="sg-lbl">.drop-zone</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 6. Banners & Status ── -->
+    <section id="sg-banners" class="sg-section">
+      <h2 class="sg-h">Banners &amp; Status</h2>
+      <div class="sg-col" style="max-width:480px">
+        <div class="sg-item">
+          <div class="pml-warn">Warning: index rebuild in progress. Run <code>build_index.py</code> to scan.</div>
+          <div class="sg-lbl">.pml-warn</div>
+        </div>
+        <div class="sg-item">
+          <div class="banner banner-ok">Index rebuilt successfully — 1,247 tracks indexed.</div>
+          <div class="sg-lbl">.banner.banner-ok</div>
+        </div>
+        <div class="sg-item">
+          <div class="banner banner-warn">This action cannot be undone.</div>
+          <div class="sg-lbl">.banner.banner-warn</div>
+        </div>
+        <div class="sg-item">
+          <div class="banner banner-err">Could not start rebuild: <code>shell_exec</code> is disabled.</div>
+          <div class="sg-lbl">.banner.banner-err</div>
+        </div>
+      </div>
+
+      <div class="sg-sep"></div>
+
+      <div class="sg-row">
+        <div class="sg-item">
+          <ul class="checks" style="min-width:220px">
+            <li><span class="dot dot-ok">●</span> Index file found</li>
+            <li><span class="dot dot-warn">●</span> APCu not installed</li>
+            <li><span class="dot dot-err">●</span> Music directory missing</li>
+          </ul>
+          <div class="sg-lbl">.checks / .dot-ok / .dot-warn / .dot-err</div>
+        </div>
+        <div class="sg-item">
+          <div class="status-card">
+            <div class="sc-big">1,247</div>
+            <div class="sc-sub">tracks in library</div>
+          </div>
+          <div class="sg-lbl">.status-card</div>
+        </div>
+        <div class="sg-item">
+          <div class="code-block">$ python3 build_index.py\n→ 1247 tracks indexed</div>
+          <div class="sg-lbl">.code-block</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 7. Tags & Chips ── -->
+    <section id="sg-tags" class="sg-section">
+      <h2 class="sg-h">Tags &amp; Chips</h2>
+      <div class="sg-row">
+        <div class="sg-item">
+          <span class="alb-genre-chip">progressive bluegrass</span>
+          <div class="sg-lbl">.alb-genre-chip</div>
+        </div>
+        <div class="sg-item">
+          <em class="alb-genre-tag">modal jazz</em>
+          <div class="sg-lbl">.alb-genre-tag</div>
+        </div>
+        <div class="sg-item">
+          <span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.9rem">
+            Home <span class="pml-badge"></span>
+          </span>
+          <div class="sg-lbl">.pml-badge</div>
+        </div>
+      </div>
+      <div class="sg-sep"></div>
+      <p class="sg-lbl" style="margin:0 0 .6rem">Description blurbs — render_album_description() / render_artist_description()</p>
+      <div class="sg-col" style="max-width:540px">
+        <div class="sg-item">
+          <p class="alb-desc"><em class="alb-genre-tag">modal jazz</em> — A landmark modal jazz recording that redefined improvisational music through restrained, unhurried interplay. Widely considered one of the greatest albums ever made, it remains essential listening.</p>
+          <div class="sg-lbl">.alb-desc (.alb-genre-tag inline)</div>
+        </div>
+        <div class="sg-item">
+          <p class="art-desc"><em class="alb-genre-tag">jazz</em> — The pivotal trumpeter who steered jazz through bebop, cool, hard bop, and electric fusion, reshaping the music at every decade.</p>
+          <div class="sg-lbl">.art-desc</div>
+        </div>
+        <div class="sg-item">
+          <div class="alb-blurb" style="display:block">
+            <span class="alb-genre-tag">folk rock</span> Sparse, intimate songwriting with fingerpicked acoustic guitar.
+          </div>
+          <div class="sg-lbl">.alb-blurb (list-mode rows, display:none by default)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 8. Pal Avatars ── -->
+    <section id="sg-pals" class="sg-section">
+      <h2 class="sg-h">Pal Avatars</h2>
+      <div class="sg-row">
+        <div class="sg-item">
+          <span class="pal-dot" title="Cordaro" style="background:#5ec47a">C</span>
+          <div class="sg-lbl">.pal-dot</div>
+        </div>
+        <div class="sg-item">
+          <span class="pal-dot" title="Daniel" style="background:#6e9ef5">D</span>
+          <div class="sg-lbl">.pal-dot</div>
+        </div>
+        <div class="sg-item">
+          <span class="pal-dot" title="Emma" style="background:#a87fe0">E</span>
+          <div class="sg-lbl">.pal-dot</div>
+        </div>
+        <div class="sg-item">
+          <span class="pal-dot-list">
+            <span class="pal-dot" title="Cordaro" style="background:#5ec47a">C</span>
+            <span class="pal-dot" title="Daniel" style="background:#6e9ef5">D</span>
+            <span class="pal-dot" title="Emma" style="background:#a87fe0">E</span>
+          </span>
+          <div class="sg-lbl">.pal-dot-list</div>
+        </div>
+      </div>
+
+      <div class="sg-sep"></div>
+      <p class="sg-lbl" style="margin:0 0 .6rem">Pal chips — render_pal_chips()</p>
+      <div class="sg-row">
+        <div class="sg-item">
+          <div style="display:flex;flex-wrap:wrap;gap:.4rem">
+            <a class="alb-pal-chip" href="#">
+              <span class="alb-pal-chip-av" style="background:#5ec47a;color:#fff">C</span>
+              <span>Cordaro</span>
+            </a>
+            <a class="alb-pal-chip" href="#">
+              <span class="alb-pal-chip-av" style="background:#6e9ef5;color:#fff">D</span>
+              <span>Daniel</span>
+            </a>
+            <a class="alb-pal-chip" href="#">
+              <span class="alb-pal-chip-av" style="background:#a87fe0;color:#fff">E</span>
+              <span>Emma</span>
+            </a>
+          </div>
+          <div class="sg-lbl">.alb-pal-chip / .alb-pal-chip-av</div>
+        </div>
+      </div>
+
+      <div class="sg-sep"></div>
+      <p class="sg-lbl" style="margin:0 0 .6rem">Favorited-by strip</p>
+      <div class="sg-row">
+        <div class="sg-item">
+          <div class="alb-fav-strip">
+            <span class="alb-fav-strip-heart">♥</span>
+            <span class="pal-dot-list">
+              <span class="pal-dot" title="Cordaro" style="background:#5ec47a">C</span>
+              <span class="pal-dot" title="Daniel" style="background:#6e9ef5">D</span>
+              <span class="pal-dot" title="Emma" style="background:#a87fe0">E</span>
+            </span>
+          </div>
+          <div class="sg-lbl">.alb-fav-strip</div>
+        </div>
+      </div>
+
+      <div class="sg-sep"></div>
+      <p class="sg-lbl" style="margin:0 0 .6rem">Contrib row (inside album cards)</p>
+      <div class="sg-row">
+        <div class="sg-item">
+          <div class="alb-contrib-row">
+            <span class="alb-contrib-label">added by</span>
+            <a href="#" style="line-height:0"><span class="pal-dot" title="Daniel" style="background:#6e9ef5">D</span></a>
+            <a href="#">Daniel</a>
+          </div>
+          <div class="sg-lbl">.alb-contrib-row / .alb-contrib-label</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 9. Album Card (list) ── -->
+    <section id="sg-album" class="sg-section">
+      <h2 class="sg-h">Album Card</h2>
+      <div class="sg-album-list">
+
+        <!-- Kind of Blue — with description, not favorited -->
+        <div class="album">
+          <div class="album-hdr" onclick="if(!event.target.closest('a,button')){void 0}">
+            <div class="art-wrap">
+              <div class="art-ph" style="background:hsl(273,35%,72%)">MD</div>
+              <button class="alb-play-btn" onclick="event.stopPropagation()" type="button" title="Play album">▶</button>
+            </div>
+            <div class="alb-info">
+              <div class="alb-name-row">
+                <div class="alb-name"><a href="#">Kind of Blue</a></div>
+                <button class="pml-fav-btn" onclick="event.stopPropagation();pmlToggleFavorite(this)" title="Add to favorites">&#9829;</button>
+              </div>
+              <div class="alb-meta-row">
+                <span class="alb-genre-chip">modal jazz</span>
+                <span class="alb-artist-year"><a href="#">Miles Davis</a></span>
+              </div>
+              <div class="alb-sentence">A landmark modal jazz recording that redefined improvisational music through restrained, unhurried interplay.</div>
+              <div class="alb-contrib-row">
+                <span class="alb-contrib-label">added by</span>
+                <a href="#" style="line-height:0"><span class="pal-dot" title="Daniel" style="background:#6e9ef5">D</span></a>
+                <a href="#">Daniel</a>
+                <span class="alb-contrib-sep">·</span>
+                <span>5 tracks</span>
+                <span class="alb-contrib-sep">·</span>
+                <span>1959</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Blue Train — no description, favorited -->
+        <div class="album">
+          <div class="album-hdr" onclick="if(!event.target.closest('a,button')){void 0}">
+            <div class="art-wrap">
+              <div class="art-ph" style="background:hsl(199,35%,72%)">JC</div>
+              <button class="alb-play-btn" onclick="event.stopPropagation()" type="button" title="Play album">▶</button>
+            </div>
+            <div class="alb-info">
+              <div class="alb-name-row">
+                <div class="alb-name"><a href="#">Blue Train</a></div>
+                <button class="pml-fav-btn pml-fav-btn--active" onclick="event.stopPropagation();pmlToggleFavorite(this)" title="Remove from favorites">&#9829;</button>
+              </div>
+              <div class="alb-meta-row">
+                <span class="alb-artist-year"><a href="#">John Coltrane</a></span>
+              </div>
+              <div class="alb-contrib-row">
+                <span class="alb-contrib-label">added by</span>
+                <a href="#" style="line-height:0"><span class="pal-dot" title="Daniel" style="background:#6e9ef5">D</span></a>
+                <a href="#">Daniel</a>
+                <span class="alb-contrib-sep">·</span>
+                <span>6 tracks</span>
+                <span class="alb-contrib-sep">·</span>
+                <span>1957</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <p class="sg-lbl" style="margin-top:.6rem">render_album_card() — list view · 88px art · with description · favorited · placeholder art</p>
+    </section>
+
+    <!-- ── 10. Album Grid ── -->
+    <section id="sg-album-grid" class="sg-section">
+      <h2 class="sg-h">Album Grid</h2>
+      <div class="lib-albums-wrap grid-mode">
+
+        <!-- Kind of Blue -->
+        <div class="album">
+          <div class="album-hdr" onclick="if(!event.target.closest('a,button')){void 0}">
+            <div class="art-wrap">
+              <div class="art-ph" style="background:hsl(273,35%,72%)">MD</div>
+              <button class="alb-play-btn" onclick="event.stopPropagation()" type="button" title="Play album">▶</button>
+            </div>
+            <div class="alb-info">
+              <div class="alb-name-row">
+                <div class="alb-name"><a href="#">Kind of Blue</a></div>
+                <button class="pml-fav-btn" onclick="event.stopPropagation();pmlToggleFavorite(this)" title="Add to favorites">&#9829;</button>
+              </div>
+              <div class="alb-meta-row">
+                <span class="alb-genre-chip">modal jazz</span>
+                <span class="alb-artist-year"><a href="#">Miles Davis</a></span>
+              </div>
+              <div class="alb-sentence">A landmark modal jazz recording that redefined improvisational music through restrained, unhurried interplay.</div>
+              <div class="alb-contrib-row">
+                <a href="#" style="line-height:0"><span class="pal-dot" title="Daniel" style="background:#6e9ef5">D</span></a>
+                <a href="#">Daniel</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Blue Train — favorited, no description -->
+        <div class="album">
+          <div class="album-hdr" onclick="if(!event.target.closest('a,button')){void 0}">
+            <div class="art-wrap">
+              <div class="art-ph" style="background:hsl(199,35%,72%)">JC</div>
+              <button class="alb-play-btn" onclick="event.stopPropagation()" type="button" title="Play album">▶</button>
+            </div>
+            <div class="alb-info">
+              <div class="alb-name-row">
+                <div class="alb-name"><a href="#">Blue Train</a></div>
+                <button class="pml-fav-btn pml-fav-btn--active" onclick="event.stopPropagation();pmlToggleFavorite(this)" title="Remove from favorites">&#9829;</button>
+              </div>
+              <div class="alb-meta-row">
+                <span class="alb-artist-year"><a href="#">John Coltrane</a></span>
+              </div>
+              <div class="alb-contrib-row">
+                <a href="#" style="line-height:0"><span class="pal-dot" title="Daniel" style="background:#6e9ef5">D</span></a>
+                <a href="#">Daniel</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Waltz for Debby -->
+        <div class="album">
+          <div class="album-hdr" onclick="if(!event.target.closest('a,button')){void 0}">
+            <div class="art-wrap">
+              <div class="art-ph" style="background:hsl(60,35%,72%)">BE</div>
+              <button class="alb-play-btn" onclick="event.stopPropagation()" type="button" title="Play album">▶</button>
+            </div>
+            <div class="alb-info">
+              <div class="alb-name-row">
+                <div class="alb-name"><a href="#">Waltz for Debby</a></div>
+                <button class="pml-fav-btn" onclick="event.stopPropagation();pmlToggleFavorite(this)" title="Add to favorites">&#9829;</button>
+              </div>
+              <div class="alb-meta-row">
+                <span class="alb-genre-chip">cool jazz</span>
+                <span class="alb-artist-year"><a href="#">Bill Evans</a></span>
+              </div>
+              <div class="alb-sentence">Intimate trio recordings captured live at the Village Vanguard in 1961, balancing lyrical spontaneity with structural elegance.</div>
+              <div class="alb-contrib-row">
+                <a href="#" style="line-height:0"><span class="pal-dot" title="Daniel" style="background:#6e9ef5">D</span></a>
+                <a href="#">Daniel</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <p class="sg-lbl" style="margin-top:.6rem">.lib-albums-wrap.grid-mode — 3 columns · full-bleed art-ph · fav overlay · play btn overlay</p>
+    </section>
+
+    <!-- ── 11. Artist Card (list) ── -->
+    <section id="sg-artist" class="sg-section">
+      <h2 class="sg-h">Artist Card</h2>
+
+      <!-- Miles Davis — with description, two contributors -->
+      <div class="album">
+        <div class="album-hdr" onclick="if(!event.target.closest('a,button')){void 0}">
+          <div class="art-wrap">
+            <div class="art-circle-ph" style="background:hsl(273,35%,72%);color:rgba(0,0,0,.42);font-size:1.3rem">MD</div>
+          </div>
+          <div class="alb-info">
+            <div class="art-name-hdr">
+              <div class="alb-name"><a href="#">Miles Davis</a></div>
+              <button class="pml-fav-btn" onclick="event.stopPropagation();pmlToggleFavorite(this)" title="Add to favorites">&#9829;</button>
+            </div>
+            <div class="alb-meta-row">
+              <span class="alb-genre-chip">jazz</span>
+            </div>
+            <div class="alb-sentence">The pivotal trumpeter who steered jazz through bebop, cool, hard bop, and electric fusion, reshaping the music at every decade.</div>
+            <div class="alb-contrib-row">
+              <a href="#" style="line-height:0"><span class="pal-dot" title="Cordaro" style="background:#5ec47a">C</span></a>
+              <a href="#">Cordaro</a>
+              <a href="#" style="line-height:0"><span class="pal-dot" title="Daniel" style="background:#6e9ef5">D</span></a>
+              <a href="#">Daniel</a>
+              <span><span class="alb-contrib-sep">· </span>8 albums</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bill Evans — favorited, no description, no contribs -->
+      <div class="album">
+        <div class="album-hdr" onclick="if(!event.target.closest('a,button')){void 0}">
+          <div class="art-wrap">
+            <div class="art-circle-ph" style="background:hsl(60,35%,72%);color:rgba(0,0,0,.42);font-size:1.3rem">BE</div>
+          </div>
+          <div class="alb-info">
+            <div class="art-name-hdr">
+              <div class="alb-name"><a href="#">Bill Evans</a></div>
+              <button class="pml-fav-btn pml-fav-btn--active" onclick="event.stopPropagation();pmlToggleFavorite(this)" title="Remove from favorites">&#9829;</button>
+            </div>
+            <div class="alb-contrib-row">
+              <span>12 tracks</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="sg-lbl" style="margin-top:.6rem">render_artist_card() — list view · 44px circle · with &amp; without description · favorited</p>
+    </section>
+
+    <!-- ── 12. Artist Grid ── -->
+    <section id="sg-artist-grid" class="sg-section">
+      <h2 class="sg-h">Artist Grid</h2>
+      <div class="lib-albums-wrap sg-artist-grid grid-mode">
+
+        <!-- Miles Davis -->
+        <div class="album">
+          <div class="album-hdr" onclick="if(!event.target.closest('a,button')){void 0}">
+            <div class="art-wrap">
+              <div class="art-circle-ph" style="background:hsl(273,35%,72%);color:rgba(0,0,0,.42)">MD</div>
+            </div>
+            <div class="alb-info">
+              <div class="art-name-hdr">
+                <div class="alb-name"><a href="#">Miles Davis</a></div>
+                <button class="pml-fav-btn" onclick="event.stopPropagation();pmlToggleFavorite(this)" title="Add to favorites">&#9829;</button>
+              </div>
+              <div class="alb-meta-row">
+                <span class="alb-genre-chip">jazz</span>
+              </div>
+              <div class="alb-sentence">The pivotal trumpeter who steered jazz through bebop, cool, hard bop, and electric fusion, reshaping the music at every decade.</div>
+              <div class="alb-contrib-row">
+                <a href="#" style="line-height:0"><span class="pal-dot" title="Cordaro" style="background:#5ec47a">C</span></a>
+                <a href="#">Cordaro</a>
+                <a href="#" style="line-height:0"><span class="pal-dot" title="Daniel" style="background:#6e9ef5">D</span></a>
+                <a href="#">Daniel</a>
+                <span><span class="alb-contrib-sep">· </span>8 albums</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bill Evans — favorited, no description -->
+        <div class="album">
+          <div class="album-hdr" onclick="if(!event.target.closest('a,button')){void 0}">
+            <div class="art-wrap">
+              <div class="art-circle-ph" style="background:hsl(60,35%,72%);color:rgba(0,0,0,.42)">BE</div>
+            </div>
+            <div class="alb-info">
+              <div class="art-name-hdr">
+                <div class="alb-name"><a href="#">Bill Evans</a></div>
+                <button class="pml-fav-btn pml-fav-btn--active" onclick="event.stopPropagation();pmlToggleFavorite(this)" title="Remove from favorites">&#9829;</button>
+              </div>
+              <div class="alb-contrib-row">
+                <span>12 tracks</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- John Coltrane -->
+        <div class="album">
+          <div class="album-hdr" onclick="if(!event.target.closest('a,button')){void 0}">
+            <div class="art-wrap">
+              <div class="art-circle-ph" style="background:hsl(199,35%,72%);color:rgba(0,0,0,.42)">JC</div>
+            </div>
+            <div class="alb-info">
+              <div class="art-name-hdr">
+                <div class="alb-name"><a href="#">John Coltrane</a></div>
+                <button class="pml-fav-btn" onclick="event.stopPropagation();pmlToggleFavorite(this)" title="Add to favorites">&#9829;</button>
+              </div>
+              <div class="alb-meta-row">
+                <span class="alb-genre-chip">avant-jazz</span>
+              </div>
+              <div class="alb-sentence">An exploratory tenor saxophonist whose restless approach redefined harmonic and spiritual possibility in jazz.</div>
+              <div class="alb-contrib-row">
+                <span>12 tracks</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <p class="sg-lbl" style="margin-top:.6rem">.lib-albums-wrap.sg-artist-grid.grid-mode — circle centered in full-width art-wrap · used on faves/artists pages</p>
+    </section>
+
+    <!-- ── 13. Track Row ── -->
+    <section id="sg-track" class="sg-section">
+      <h2 class="sg-h">Track Row</h2>
+      <table class="tracks open">
+        <tbody>
+          <tr>
+            <td class="td-play">
+              <button class="pml-play-btn" type="button">▶</button>
+            </td>
+            <td class="td-num">1</td>
+            <td>So What</td>
+            <td>
+              <button class="pml-atq-btn" type="button" title="Add to queue">+</button>
+            </td>
+            <td class="td-dur">9:22</td>
+            <td class="td-contrib">Daniel</td>
+          </tr>
+          <tr>
+            <td class="td-play">
+              <button class="pml-play-btn pml-active" type="button">▶</button>
+            </td>
+            <td class="td-num">2</td>
+            <td>Freddie Freeloader</td>
+            <td>
+              <button class="pml-atq-btn" type="button" title="Add to queue">+</button>
+            </td>
+            <td class="td-dur">9:46</td>
+            <td class="td-contrib">Daniel</td>
+          </tr>
+          <tr>
+            <td class="td-play">
+              <button class="pml-play-btn" type="button">▶</button>
+            </td>
+            <td class="td-num">3</td>
+            <td>Blue in Green</td>
+            <td>
+              <button class="pml-atq-btn" type="button" title="Add to queue">+</button>
+            </td>
+            <td class="td-dur">5:37</td>
+            <td class="td-contrib">Daniel</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="sg-lbl" style="margin-top:.6rem">.tracks.open · .pml-play-btn (.pml-active on row 2) · .pml-atq-btn · .td-num / .td-dur / .td-contrib</p>
+    </section>
+
+  </div>
+</div>
+</div>
+
+<script>
+(function () {
+  // TOC smooth scroll
+  var HEADER_H = 60;
+  document.querySelectorAll('.sg-toc a').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      var id = a.getAttribute('href').slice(1);
+      var target = document.getElementById(id);
+      if (!target) return;
+      var top = target.getBoundingClientRect().top + window.scrollY - HEADER_H;
+      window.scrollTo({ top: top, behavior: 'smooth' });
+    });
+  });
+
+  // Dark mode toggle
+  document.getElementById('dark-toggle').addEventListener('click', function () {
+    document.documentElement.classList.toggle('dark');
+  });
+
+  // Minimal fav toggle polyfill
+  window.pmlToggleFavorite = function (btn) {
+    btn.classList.toggle('pml-fav-btn--active');
+  };
+}());
+</script>
+
+</body>
+</html>

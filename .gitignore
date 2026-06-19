@@ -1,0 +1,8 @@
+# OS / editor cruft
+.DS_Store
+**/.DS_Store
+._*
+*.swp
+*~
+.idea/
+.vscode/
