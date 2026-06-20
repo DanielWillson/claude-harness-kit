@@ -139,14 +139,17 @@ and the wiki reinforce each other. Bake hygiene into the same three places:
 - **Audit:** a hard gate that *fails* if any secret file is tracked + warns on an
   oversize uncommitted tree. (Gitignore the secrets first; a commit step should
   abort if a secret is staged.)
-- **Unattended pass:** a **scoped** auto-commit — commit only the wiki's own
-  directory, never `git add -A`, so the daily job can't sweep up unrelated or
-  secret work. This coexists with the kickoff Stop hook (which does `git add -u` over the
-  whole tree on session end): the pass should `git add wiki/` and commit **explicitly** —
-  `git add -u` stages only *modified tracked* files, so it would silently skip the **new**
-  pages a pass routinely creates (stubs, seeded incidents). Commit the wiki dir yourself and
-  leave a clean tree for the Stop hook — the hook is the fallback, not the committer (kickoff
-  Principle 4).
+- **Unattended pass:** a **scoped** auto-commit — stage the wiki's **markdown only**,
+  never `git add -A` *or even a bare `git add wiki/`*, so the daily job can't sweep up
+  unrelated, secret, or stray work. Once `wiki/` holds the maintenance script (§4), a bare
+  `git add wiki/` would also stage its build artifacts (`wiki/__pycache__/*.pyc`) — and
+  leaning on `.gitignore` to exclude them is the deny-list-of-the-known trap this guide
+  warns against. Stage with a markdown-scoped pathspec instead — `git add --
+  ':(glob)wiki/**/*.md'` — then commit **explicitly**. (Bonus: the glob also catches the
+  **new** `.md` pages a pass routinely creates — stubs, seeded incidents — which `git add
+  -u` would silently skip, since it stages only *modified tracked* files.) Commit the wiki's
+  markdown yourself and leave a clean tree for the kickoff Stop hook — the hook is the
+  fallback, not the committer (kickoff Principle 4).
 
 ### 2.8 Be explicit about the safety model
 Decide up front who can change the wiki and what the check is:
@@ -289,6 +292,19 @@ Two triggers:
   same logic, run at the end of a work session (the most reliable trigger, since
   the agent knows exactly what it touched).
 
+**Both triggers above are *this agent's*** — neither fires for a different LLM/tool, a
+human's plain `git commit`, or CI. So treat the **scheduled reconcile as the *primary*
+freshness mechanism** (zero per-commit friction) — but honestly: it's *rule*-portable, not
+free. Something must *run* it (a scheduled session, a CI job), the same runtime-coupling
+that makes auto-commit non-portable (kickoff Principle 4). For a project where someone
+*other* than this agent commits (kickoff Intake Q6), the tool-agnostic enforcement is **the
+audit run in CI** — `bash scripts/audit.sh` WARNs on doc drift and FAILs on a tracked secret
+*no matter who committed* — plus the optional secret pre-commit hook for *local* commits
+(kickoff §1.3b). A git pre-commit hook does **not** run in CI; don't rely on one there. And
+**match the check to your go-live boundary** (kickoff Intake Q7): if you ship by
+tar/rsync/file-write/auto-merge rather than `git commit`, a commit-time check can't guard
+what ships — put the freshness/secret check at the **deploy step or on the schedule**.
+
 **The human `README` is a sibling reconcile target.** A project's `README.md` (kickoff
 `readme-template.md`) makes the same code-coupled claims a wiki page does — how to run it,
 what it does — so it drifts the same way. It carries a one-line `<!-- reconcile-code: … -->`
@@ -416,6 +432,13 @@ it — it adds cost and failure surface without payoff at this scale:
 - No human-review gates / source-trust tiers — *if* you chose the LLM-only model
   (§2.8); git + reconcile-against-code are the safety net.
 - No mtime-based change detection — `git diff HEAD` is cleaner (§4).
+- No **blocking** "doc-currency" pre-commit gate (block any commit that changes code
+  without touching its wiki page). It's redundant with the scheduled reconcile, fires
+  constantly on shared files listed in many pages' `code:`, and "a gate people disable is
+  worse than no gate." If you want a commit-time doc check at all, make it *warn-only* (exit
+  0, never blocks) — the durable freshness guarantee is the reconcile pass + the audit.
+- No reliance on a **git hook for CI** — client-side hooks don't run there; the audit run as
+  a pipeline step is the CI enforcer (§4; kickoff §1.3b).
 
 Naming what you're omitting, in SCHEMA.md, is as valuable as what you include — it
 stops the next session from "helpfully" adding it.

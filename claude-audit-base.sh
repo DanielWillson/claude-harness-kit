@@ -161,7 +161,10 @@ section "GIT HYGIENE"
 # The kickoff's auto-commit Stop hook uses `git add -u` (tracked files only), so it
 # won't stage untracked secrets — but it can't catch a secret that was previously
 # committed and is already tracked. This is the backstop: a secret tracked in git
-# is a FAIL. Also nudge toward committing in logical units.
+# is a FAIL. Also nudge toward committing in logical units. NOTE: running this whole
+# script as a CI step is the TOOL-AGNOSTIC enforcer — it fires no matter who committed
+# (a different LLM/tool, a human, or CI) and catches an already-committed secret a
+# client-side pre-commit hook never sees (which does NOT run in CI). See kickoff §1.3b.
 # ═══════════════════════════════════════════════════════════════════════════
 if git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1; then
     # Tune the pattern to your project's secret files; cross-check denyWrite in
@@ -183,6 +186,20 @@ if git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1; then
     tracked_kit=$(git -C "$ROOT" ls-files | grep -iE '(^|/)(claude-project-kickoff|llm-wiki-kickoff|claude-audit-base|prd-template|readme-template)\.(md|sh)$' || true)
     [ -n "$tracked_kit" ] && { warn "Kickoff Kit scaffolding committed — it's one-time; keep sources out of the repo (outputs persist, sources don't)"; echo "$tracked_kit" | sed 's/^/       /'; } \
                           || pass "no Kickoff Kit scaffolding committed"
+    # Secret pre-commit hook actually enabled? (kickoff §1.3b) A tracked hooks/ dir only
+    # fires once `core.hooksPath` is set (per-clone, can't travel in the repo) AND the hook
+    # is executable ON DISK. Either missing = a silent no-op that LOOKS installed. WARN, not
+    # FAIL: a fresh clone simply hasn't run the one-time setup yet — surface it, don't red it.
+    if [ -n "$(git -C "$ROOT" ls-files hooks/ 2>/dev/null)" ]; then
+        hookpath=$(git -C "$ROOT" config --get core.hooksPath || true)
+        if [ -z "$hookpath" ]; then
+            warn "tracked hooks/ but core.hooksPath unset — the hook is a silent no-op; run: git config core.hooksPath hooks (kickoff §1.3b)"
+        elif [ -f "$ROOT/$hookpath/pre-commit" ] && [ ! -x "$ROOT/$hookpath/pre-commit" ]; then
+            warn "pre-commit hook not executable on disk — git ignores it; run: git update-index --chmod=+x $hookpath/pre-commit && git checkout -- $hookpath/pre-commit (kickoff §1.3b)"
+        else
+            pass "git pre-commit hook enabled (core.hooksPath=$hookpath) and executable"
+        fi
+    fi
     dirty=$(git -C "$ROOT" status --porcelain | wc -l | tr -d ' ')
     [ "${dirty:-0}" -gt 40 ] && warn "large uncommitted tree ($dirty entries) — commit in logical units" \
                              || pass "working tree manageable ($dirty uncommitted)"
@@ -206,7 +223,10 @@ todo=$(grep -rnE 'TODO|FIXME|HACK|XXX' "$SRC" 2>/dev/null | wc -l | tr -d ' ')
 # Oversized files often mix concerns. Tune the threshold; exempt files that are
 # large by nature (generated code, a single cohesive type/model module, or a
 # single-responsibility data-access layer that deliberately holds all queries —
-# splitting that one would violate "data access in one place").
+# splitting that one would violate "data access in one place"). Note "in one place"
+# means one *layer*, which can legitimately be a package / several modules (e.g.
+# transactional vs. reporting reads) — not necessarily one file; the invariant is
+# "no raw queries leak outside the data layer," not "all queries live in one file."
 big=0
 while IFS= read -r f; do
     lines=$(wc -l < "$f" 2>/dev/null | tr -d ' ')

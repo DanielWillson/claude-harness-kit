@@ -33,6 +33,14 @@ lean `CLAUDE.md` + wiki, never this kit.
   + `CLAUDE.md` + commit bodies); memory is for user-level preferences only, and a
   project-specific fact never goes in global `~/.claude/CLAUDE.md` (it would pollute every
   other project). Default any project fact to the wiki.
+- **Tool-agnostic by the repo, not by one agent** — the durable rules live where *any* tool
+  reads or runs them: the contract's *content* (read by any LLM/tool/human) and the audit
+  (run on demand or in CI). Claude-specific machinery (the Stop-hook auto-commit,
+  `.claude/settings.json`, `/wiki`) is a convenience *adapter* on top. When a second
+  committer is in play (another LLM, a teammate, CI), a coarse secret-only `git` pre-commit
+  hook + the audit-in-CI carry the guarantee (kickoff §1.3b). Auto-commit itself can't be
+  made tool-agnostic — git has no commit-on-change event — so only the *rules* travel, not
+  the *act* of committing.
 - **Scaffolding vs. artifacts** — the kit is used once; only its outputs persist (the audit
   even warns if a kit source file gets committed into a project).
 

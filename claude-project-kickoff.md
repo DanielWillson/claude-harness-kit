@@ -58,13 +58,15 @@ project rather than a code one? See the **archetype appendix** for the editorial
 deltas.
 
 ### 1.0a Intake — gather these once, up front
-Five answers shape several setup steps; collecting them in one short exchange beats
+Seven answers shape several setup steps; collecting them in one short exchange beats
 stopping to ask three or four separate times mid-ritual. Ask, then execute uninterrupted:
 1. **Stack** — language/runtime, framework, package manager, test runner, linter (drives §1.2 `.gitignore`, §1.3 allowlist, the audit TOOLING section).
 2. **Location** — local disk, or a mounted/network/synced volume (NAS/SMB/NFS, iCloud/Dropbox/Drive)? (drives §1.1a — venv/cache placement and change-detection).
 3. **Sensitive paths** — *"Name 2–3 files/dirs holding credentials or that must never be overwritten, even accidentally."* (one list, used in **both** `denyWrite` §1.3 **and** `CLAUDE.md` §1.5).
 4. **Daily commands** — *"The 5–6 shell commands you'll run daily — test runner, linter, package manager, script runner."* (the §1.3 allowlist; an incomplete one makes the agent prompt on every routine op).
 5. **Deploy target** — same as the dev machine, or different (server/NAS/container/cloud VM)? Any quirks (OS, package manager, permission model, paths)? Offline/air-gapped? (drives `CLAUDE.md` §1.5 and the §1.3a maturity call).
+6. **Who else commits** — will anything *other than this one agent* ever commit here: a different LLM/tool (Cursor, aider, Copilot), a human teammate, or CI? (drives §1.3b — the secret pre-commit hook + audit-in-CI, the *tool-agnostic* enforcers; if it's solo-one-agent, skip both and lean on `denyWrite` + the audit.)
+7. **Go-live boundary** — do you ship by `git commit` (push/merge), or by something else (tar/rsync, copying files, a deploy step, an auto-merge)? (drives *where* the doc-freshness check lives — wiki guide §4: a commit-time check can't guard a release that never goes through a commit.)
 
 The sections below still explain *why* each answer matters at its point of use — this just
 front-loads the asking so setup doesn't stall on four separate questions. Don't defer the
@@ -164,8 +166,8 @@ routine operation, defeating the purpose.
         "hooks": [
           {
             "type": "command",
-            "command": "if git rev-parse --git-dir > /dev/null 2>&1 && [ -n \"$(git status --porcelain)\" ]; then git add -u && git commit -m \"Auto-commit: $(git diff --cached --stat | tail -1)\" >/dev/null 2>&1 || true; fi",
-            "statusMessage": "Auto-committing changes..."
+            "command": "if git rev-parse --git-dir >/dev/null 2>&1 && [ -n \"$(git status --porcelain)\" ]; then git add -u && { git commit -m \"WIP: auto-saved (review/reword)\" >/dev/null 2>&1 || { echo \"Auto-commit blocked (a hook rejected it - likely a staged secret); nothing committed, changes still staged. Resolve, then commit.\" >&2; exit 1; }; }; fi",
+            "statusMessage": "Auto-saving uncommitted changes..."
           }
         ]
       }
@@ -176,9 +178,17 @@ routine operation, defeating the purpose.
 
 **Adapt the allowlist to the stack** (add the test runner, package manager,
 linter, formatter the project actually uses). Keep the denies. **Note on the
-Stop hook:** it uses `git add -u` (only already-tracked files), not `git add -A`
-— this prevents the fallback commit from staging untracked files, including
-secrets that may have slipped past `.gitignore`. Staging new files belongs in
+Stop hook (it's a safety *net*, not the committer).** It does two honest things:
+it labels its fallback commit `WIP: auto-saved (review/reword)` — *not* a real "why"
+message, which Principle 4 reserves for the deliberate commits the LLM makes *during*
+the session — and on a **blocked** commit it surfaces the failure and exits non-zero
+instead of silently swallowing it (the old `… || true` reported success even when
+nothing committed — a real footgun the moment any blocking hook exists, §1.3b). It
+stages with `git add -u` (tracked files only, never `git add -A`), which keeps
+*untracked* secrets out of the fallback — but `git add -u` still sweeps **unrelated
+in-flight tracked edits** into one commit, so the net is only clean if (a) the LLM
+commits in small logical units as it works (Principle 4) and (b) concurrent sessions
+use separate worktrees (Part 3), never one shared tree. New files still belong in
 explicit hand-commits.
 
 **Complementary rule (holds regardless of staging strategy):** never write
@@ -272,10 +282,71 @@ it. And once real secrets or a deploy pipeline exist, switch regardless: Accept
 Edits keeps friction on bash commands, which is where the meaningful blast radius
 lives.
 
+### 1.3b Tool-agnostic enforcement — the secret pre-commit hook + audit-in-CI (when a second committer exists)
+The Stop hook, `.claude/settings.json`, and the `/wiki` command are *this agent's*
+mechanisms — they don't fire for a different LLM/tool, a human's plain `git commit`, or
+CI. If Intake Q6 said anything **other than one agent commits here**, add the two layers
+that ride on the repo itself, not on any one tool. (Skip this whole section for a genuinely
+solo-one-agent project — `denyWrite` (§1.3) + the audit's tracked-secret FAIL (§1.6) already
+cover you, with no per-clone setup.)
+
+**1. A coarse, secret-only `git` pre-commit hook** — the one check that blocks a secret
+*before* it enters history, for any *local* committer. Keep it narrow on purpose (match
+secret *filenames*, don't scan content): coarse + low-false-positive is what stops a gate
+from getting disabled. Default it **ON at Hardened**, **recommended at Standard+**. Ship it
+as a tracked `hooks/pre-commit`:
+```sh
+#!/usr/bin/env bash
+# Block a commit that STAGES a likely secret. Hard gate — never bypass with --no-verify.
+hits=$(git diff --cached --name-only \
+       | grep -iE '(^|/)(\.env($|\.)|secrets?/|.*\.pem$|.*\.key$|id_rsa|credentials)' || true)
+if [ -n "$hits" ]; then
+  echo "BLOCKED: a secret-looking file is staged:" >&2
+  echo "$hits" | sed 's/^/  /' >&2
+  echo "Unstage it (git restore --staged <file>) and gitignore it. Do NOT use --no-verify." >&2
+  exit 1
+fi
+```
+Activation is a **manual, per-clone** step — there is no zero-touch, cross-stack way to
+auto-enable it (don't reach for npm's `prepare`: it's Node-only and would bake a stack
+assumption into a stack-agnostic kit). Document it in the README / `CLAUDE.md` quirks:
+```sh
+git config core.hooksPath hooks       # per-clone — this CANNOT travel in the repo
+git add --chmod=+x hooks/pre-commit   # sets the exec bit in git's INDEX…
+git checkout -- hooks/pre-commit       # …and THIS sets it on disk. chmod is deny-listed, and
+                                       #   the index bit alone leaves the hook a silent no-op
+                                       #   in your own clone until a fresh checkout.
+```
+Three things that bite (each from a real run):
+- **`core.hooksPath` is per-clone and *singular*.** It can't be committed, so every clone
+  re-runs activation; and it makes git look *only* there, ignoring `.git/hooks` — so it
+  collides with any existing hook manager (Husky/lefthook). The audit WARNs (not FAILs)
+  when a tracked `hooks/` exists but `core.hooksPath` is unset, so a fresh clone shows the
+  gap without red-flagging a known setup step (§1.6).
+- **Hard, never `--no-verify`'d.** `--no-verify` skips the *entire* hook, so don't fold a
+  soft "nag" check into it — escaping the nag would also disarm the secret block. Keep this
+  hook secret-only; the auto-committer surfaces a block (it now does), it does not bypass it.
+- **It only covers a *local* `git commit`.** It does **not** run in CI, and it's off on any
+  clone that hasn't run activation. For CI and the already-committed window, the enforcer is
+  the audit (below).
+
+**2. Run the audit in CI.** `bash scripts/audit.sh` already FAILs on a *tracked* secret and
+WARNs on doc drift (§1.6); wiring it into your CI pipeline is the genuinely tool-agnostic
+enforcer — it runs no matter who committed, and catches a secret that's *already* in history
+(a window the staged-diff hook can't see). The two are complementary, not interchangeable:
+the pre-commit hook guards the *about-to-stage* moment; the audit guards the
+*already-committed* state.
+
 ### 1.4 Verify before relying on it
 - Validate the settings JSON: it must parse and the hook command must be present.
 - Pipe-test the auto-commit hook in a throwaway repo (`/tmp`) before trusting it —
-  confirm it commits when dirty and is a clean no-op when the tree is clean.
+  confirm it commits when dirty, is a clean no-op when the tree is clean, and (now that it
+  surfaces failures) reports a *blocked* commit instead of falsely succeeding.
+- **Any blocking git hook (§1.3b): prove it actually *fires*, not just that its checker
+  works.** Stage a throwaway `.env` and attempt a real commit — confirm git *rejects* it.
+  "The checker exits non-zero" and "git invokes the checker" are different links, and only a
+  real commit attempt tests the wiring. Confirm the hook is executable *on disk* (mode
+  100755, not just in the index) and that `core.hooksPath` is set.
 - Commit the `.claude/settings.json` with a detailed message.
 
 ### 1.5 Create a starter CLAUDE.md
@@ -284,10 +355,18 @@ project knowledge that should always be in context — not memory files, which o
 load when recalled, and not inline comments, which require reading the code.
 
 **On names.** `CLAUDE.md` is *the* contract file (some tools/stacks call it `AGENTS.md` —
-Claude reads either; if you keep both, make one a symlink). `CONTRACT.md` is **not** a
-separate file you maintain: it's the frozen snapshot you hand subagents at fan-out
-(Part 3.3) — an export of CLAUDE.md's invariants + data shapes for that one run. Wherever
-this kit says "the contract," it means CLAUDE.md.
+Claude reads either; if you keep both, make one a symlink — keep **one physical file**,
+never a two-file canonical/adapter split, which just drifts). **Write its rules to be
+tool-neutral.** If anything other than this agent may work here (Intake Q6 — another
+LLM/tool, a teammate, CI), phrase the durable rules — commit discipline, doc discipline,
+sensitive paths — as plain repo facts ("commit in small logical units", "never overwrite
+`secrets/`"), *not* as "the Claude Stop hook does X". The *mechanism* is this agent's; the
+*rule* belongs to the repo, so any tool that reads the contract inherits it. This — plus
+the audit (§1.6) — is the kit's real tool-agnostic layer: both are read/run by anything,
+with no per-clone activation and nothing to silently switch off (unlike a git hook).
+`CONTRACT.md` is **not** a separate file you maintain: it's the frozen snapshot you hand
+subagents at fan-out (Part 3.3) — an export of CLAUDE.md's invariants + data shapes for that
+one run. Wherever this kit says "the contract," it means CLAUDE.md.
 
 **You already have the inputs from Intake (§1.0a):** the **deploy target** (Q5 — document
 its OS/runtime/version, quirks, and how to reach it) and the **never-modify list** (Q3 —
@@ -563,8 +642,20 @@ Commit history is documentation of intent over time.
   is a property of *commit granularity*, not of stopping to ask more often — don't turn it
   into a human-approval gate. The anti-pattern is the 1,500-line blob (or a Stop-hook
   mega-commit).
-- **Branch first; never commit directly to `main`.** Even solo — a branch keeps
-  `main` a stable, verified baseline. Merge only when tests and the audit pass.
+- **Branch first for team / Standard+ work; solo-on-`main` with the auto-commit net is
+  fine.** Once *anyone else* shares the repo (another tool, a teammate, CI — Intake Q6), a
+  branch keeps `main` a stable, verified baseline — merge only when tests and the audit
+  pass. But on a genuinely solo project, "never commit to `main`, even solo" is a rule no
+  mechanism here enforces and you won't follow; committing to `main` with the auto-commit
+  net is fine — don't build branch-aware machinery to police a rule you've opted out of.
+- **Know the honest ceiling of automation.** No mechanism here *authors* a commit message
+  or a doc, or supplies *judgment* about when and what to commit. The audit and any git
+  hook only *enforce presence* (a doc exists; no secret staged); the reconcile pass only
+  *detects* drift; the LLM still writes the content and chooses the commit boundaries. And
+  true "commit the instant a file changes" is impossible in git (no commit-on-change
+  event), so auto-commit is tied to *this* editor/runtime — only the **rules** travel to
+  another tool, never the *act* of committing. Don't over-trust any one mechanism to
+  "handle committing"; it handles *catching what you missed*.
 - **Push is outward-facing; treat it as a gate.** A commit is local and reversible;
   a push is not. Confirm explicitly before pushing; never let it happen as a side
   effect of an autonomous build run.
@@ -789,9 +880,15 @@ these defaults are what make the output *integrate* and the night actually
     token-heavy. Starting it on a near-exhausted usage window risks a mid-run
     stall that leaves a partial, inconsistent tree. If a reset is near, wait for
     it.
-11. **The main session commits; agents don't.** Parallel agents committing race
-    on the git index. Have agents write only; the main session hand-commits per
-    area afterward (the Stop hook is the safety net).
+11. **The main session commits; agents don't — and isolate any *unattended* committer.**
+    Parallel agents committing race on the git index. Have agents write only; the main
+    session hand-commits per area afterward (the Stop hook is the safety net). And run any
+    *unattended* committer (an overnight build, the scheduled wiki reconcile) in its **own
+    worktree, never a shared tree** — running it in the same clone as an interactive session
+    can sweep that session's half-done work into a commit or race the index. The unattended
+    auto-committer should stage **explicit paths only** (the concern is known there), never
+    `git add -u` the whole tree — the generic session-end net keeps `git add -u` only
+    because it can't know your paths.
 12. **Prefer free-text agent reports over forced output schemas for build agents,
     and verify on disk regardless.** A schema-validation miss on an agent's final
     call can drop its *entire reported result* even when its file writes
@@ -809,13 +906,16 @@ these defaults are what make the output *integrate* and the night actually
 - [ ] tailored `.gitignore` committed
 - [ ] sensitive paths identified (ask before writing settings)
 - [ ] daily commands identified (ask before writing settings)
+- [ ] who-else-commits identified (Intake Q6 — drives the §1.3b secret hook + audit-in-CI)
+- [ ] go-live boundary identified (Intake Q7 — commit vs. deploy/rsync; drives where the freshness check lives)
 - [ ] `.claude/settings.json` (sandbox + auto-approve + allowlist + denies + Stop hook)
 - [ ] `denyWrite` covers `.env*`/`secrets/**` **plus this project's sensitive paths**
 - [ ] `chmod` deny relaxed if deploy target requires it
-- [ ] settings JSON validated; auto-commit hook pipe-tested
+- [ ] settings JSON validated; auto-commit hook pipe-tested (surfaces a *blocked* commit, not a false success); (if a blocking hook §1.3b) proved it FIRES via a real blocked commit
 - [ ] settings committed with a detailed message
 - [ ] `CLAUDE.md` created: stack, deploy target + quirks, sensitive paths, daily commands
 - [ ] `scripts/audit.sh` seeded from `claude-audit-base.sh`; TOOLING section wired; git-hygiene secret gate active
+- [ ] (if a 2nd committer — Q6) secret-only `hooks/pre-commit` installed + `core.hooksPath` set + verified by a real blocked commit (§1.3b); `bash scripts/audit.sh` wired into CI
 - [ ] (if a spec/PRD exists) its load-bearing invariants extracted into the audit INVARIANTS + `CLAUDE.md`
 - [ ] routing rule applied: guardrail → `CLAUDE.md`, machine-check → audit, full story (why/dead-ends/history) → wiki (Principle 2)
 - [ ] `CLAUDE.md` carries the **Knowledge & memory** directive: read-the-wiki-first + project-knowledge-in-the-repo-NOT-`~/.claude` (§1.5)
