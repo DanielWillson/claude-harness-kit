@@ -172,6 +172,20 @@ if git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1; then
     tracked_secrets=$(git -C "$ROOT" ls-files | grep -iE '(^|/)(\.env($|\.)|secrets?/|.*\.pem$|.*\.key$|id_rsa|credentials)' || true)
     [ -n "$tracked_secrets" ] && { fail "SECRET FILE TRACKED IN GIT — gitignore it + 'git rm --cached' now:"; echo "$tracked_secrets" | sed 's/^/       /'; } \
                               || pass "no obvious secret files tracked"
+    # Settings guards WRITES but not secret READS? The sandbox is Bash-only and denyWrite
+    # only blocks clobbering a secret — it does NOT stop the agent (or a native Read) from
+    # reading .env/secrets and sending the contents off. The safety floor adds permission-
+    # layer Read denies for exactly this (kickoff §1.3a). WARN if settings exist but carry no
+    # secret-Read deny — a project guarding writes but not reads is the #1 gap. Grep-only.
+    settings_file="$ROOT/.claude/settings.json"
+    if [ -f "$settings_file" ]; then
+        if grep -qE 'denyWrite|"Write\(|"Edit\(' "$settings_file" 2>/dev/null \
+           && ! grep -qE '"Read\((\./)?(~/\.ssh|~/\.aws|\.env|secrets)' "$settings_file" 2>/dev/null; then
+            warn ".claude/settings.json guards secret WRITES but has no secret-READ deny — add permissions.deny Read(./.env*), Read(./secrets/**), Read(~/.ssh/**) (kickoff §1.3a; sandbox is Bash-only, denyWrite can't stop a read+exfil)"
+        else
+            pass "settings carries a secret-read deny (or no write-guard to mismatch)"
+        fi
+    fi
     # Bulk-data / backup artifacts: not always secret, but they're what a broad
     # auto-commit sweeps and where credentials hide (a DB holding tokens, a .env.bak).
     # WARN (not FAIL): a legit fixture DB may be tracked on purpose — review each.
