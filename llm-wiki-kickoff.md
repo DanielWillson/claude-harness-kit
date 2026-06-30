@@ -35,6 +35,12 @@ cross-referenced pages in one pass without fatigue. So the whole design is about
 making maintenance cheap and automatic. A wiki that isn't maintained is *worse*
 than no wiki: agents will confidently act on stale pages.
 
+*In the field's emerging vocabulary,* this wiki is the project's **"system of record"**
+(OpenAI's term for the repository's knowledge base) — but a stronger one. A static `docs/` tree
+is a system of record by assertion only: trusted on faith, it rots silently.
+Reconcile-against-ground-truth (§2.1) is what earns the name — staleness is *detected against
+the code*, not assumed away.
+
 ---
 
 ## 2. The principles that actually matter
@@ -75,6 +81,11 @@ These are the *memory* layers. A fourth, non-memory layer — the **audit** (a g
 kickoff §1.6) — *enforces* invariants rather than storing knowledge. The full routing
 across all four is the kickoff's one-liner: guardrail → contract, machine-check → audit,
 full story → wiki.
+
+*The axis in the field's words:* **"anything [the agent] cannot access in context at runtime
+does not exist"** (OpenAI). That is exactly why placement is decided by *when a fact is loaded*,
+not merely where it's written — the lean contract carries pointers, with the depth one pointer
+(and one read) away.
 
 > ⚠️ **The trap that will bite you (contract trim):** "this fact is also in the
 > wiki" does **not** make it safe to delete from the contract file — deletion

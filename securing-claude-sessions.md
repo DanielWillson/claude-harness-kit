@@ -76,7 +76,7 @@ last column — *can the agent or user undo it?* — is the whole story.
 | **D — Managed settings** | a root-owned file only an admin can write | Claude Code + OS | **No** — user and agent are both locked out |
 | **E — Server-side** | GitHub (branch rules + CODEOWNERS) | GitHub's servers | **No** — it's not even on this computer |
 
-A key thing to notice up front: **the same kind of rule can live at different levels, and that
+One thing to notice up front: **the same kind of rule can live at different levels, and that
 choice is the security decision.** We put our *convenient* rules (allow/ask) in the repo so they
 ship to everyone via git — and our *non-negotiable* rules (deny, sandbox locks) in the managed
 file so nobody, agent included, can weaken them. Same syntax, very different strength.
@@ -155,7 +155,7 @@ levels can't:
 - Blocks commands that **print stored credentials** (`gh auth token`, `git credential`,
   `security find-generic-password`).
 
-**Upsides of Level B.** Powerful, precise, and it **ships through git** — edit once, everyone
+**Upsides of Level B.** Precise, and it **ships through git** — edit once, everyone
 gets it. Deny/ask outrank the mode; the hook is as exact as you can program.
 **Downsides.** The config lives in the repo, so by itself it's only as strong as "nobody/no
 agent rewrites it." We handle that two ways: the *most critical* deny rules (secret reads,

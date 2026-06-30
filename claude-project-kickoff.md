@@ -865,6 +865,12 @@ Build *simple*, not merely *easy*.
   delta), compute it in the service layer and return it in the API response — not
   in the client from multiple raw fetches. One place, tested once, consistent
   across every consumer (dashboard, MCP tools, future clients).
+- **Favor agent-legible structure — within the stack you were handed.** Clear module
+  boundaries, explicit types, one decision in one place, a small dependency surface: these
+  make a codebase *navigable to an agent* — what Fowler calls **harnessability** (crediting
+  Ned Letcher's **"ambient affordances"**). Optimize for it *inside* the chosen stack; do
+  **not** read this as license to pick the stack for the agent's benefit — the stack is the
+  user's input (see the header), every tool here an example.
 
 ### Principle 2 — Documentation Where It Lasts
 Documentation is a first-class deliverable — but *where* it lives matters as much
@@ -894,6 +900,14 @@ work, the why) → the **wiki**. One fact often spawns all three — a fixed bug
 guardrail line, a regression grep, and an incident page — but only the terse guardrail earns
 a place in always-loaded context. When in doubt about depth (architecture, rationale,
 history), it goes in the wiki, **not** `CLAUDE.md`.
+
+*Field cross-reference (the same split, in the emerging shared vocabulary):* this is what
+OpenAI's Codex team calls treating the contract as a **"table of contents,"** not an
+encyclopedia, over a knowledge base that is the **"system of record."** Keep the kit's two
+deliberate divergences: it splits *three* ways, not two — human `README` (front door), agent
+`CLAUDE.md` (always-loaded contract), wiki (depth/history) — and its system of record
+**reconciles against the code** (`llm-wiki-kickoff.md` §2.1), so it can't silently rot the way
+a static `docs/` tree can.
 
 **What to avoid:**
 - Multi-line inline comment blocks or docstrings explaining *what* code does —
@@ -1004,6 +1018,14 @@ gate** (that fights autonomy):
   (Part 3), applied to the *plan*.
 - Plan → stress-test the plan → build. The review is a cheap agent, not a checkpoint.
 
+This is also the cheapest instance of a general **placement** rule: run *fast, deterministic,
+cheap* checks early (a throwaway plan, the audit greps, type-checks) and reserve *slow,
+expensive, probabilistic* ones (adversarial agents, persona panels, actually running the app)
+for later, higher-stakes gates — Fowler's **"keep quality left."** Placement is a real lever
+but a *secondary* one here: the kit's primary axes for where a check lives are
+**enforceability** (deterministic backstop vs. probabilistic classifier) and the **go-live
+boundary** (`llm-wiki-kickoff.md` §4), not cost alone.
+
 ### Principle 7 — When stuck, instrument — don't loop
 An agent's signature failure is re-trying the same broken fix with cosmetic
 variations. Rule: after **~2 failed attempts at the same idea, stop** — don't try a
@@ -1091,6 +1113,12 @@ When the task is large enough to fan out across agents and/or run unattended,
 these defaults are what make the output *integrate* and the night actually
 *finish*. They are ordered roughly by leverage.
 
+*The posture in the field's words:* **"Humans steer. Agents execute."** (OpenAI). Read it the
+kit's way, precisely: *steering* is **setting the deterministic `deny`/`ask` gates and reviewing
+small commits after the fact** — not approving each step (that fights autonomy, Principle 6) and
+not a sentence in chat (a non-control lost on compaction, Principle 4). *Execution* is hands-off
+auto mode plus **adversarial-agent** review, not a human pausing the run.
+
 1. **Scout inline, then fan out.** Discover the work-list yourself with cheap
    reads/greps before launching parallel agents. You usually don't know the shape
    before the task — only before the *orchestration step*.
@@ -1108,7 +1136,12 @@ these defaults are what make the output *integrate* and the night actually
    are exactly what parallel agents violate inconsistently (sign conventions, immutable
    fields, "collapse in place not duplicate", "never load all rows into memory"). When the
    wave lands, the durable *why* behind any decision resolved here graduates to a wiki
-   decision page — the snapshot is throwaway, the rationale isn't.
+   decision page — the snapshot is throwaway, the rationale isn't. Pre-loading that snapshot is deterministic
+   **context-hydration** (Stripe's term: *"hydrate the context"*) — distinct from scouting
+   (#1): scouting is the agent *discovering* an unknown work-shape; hydration is *handing* it
+   known-relevant context up front. They compose. External intel a run needs — ticket text, a
+   design doc, an API reference, MCP-tool output — belongs *in* the frozen snapshot, fetched
+   once, not re-derived by every subagent.
 4. **Partition parallel agents by directory, not worktrees.** Disjoint file
    ownership = no merge conflicts and no worktree overhead. Give every shared file
    exactly one owner (e.g. the API router belongs to the API agent alone).
@@ -1145,7 +1178,10 @@ these defaults are what make the output *integrate* and the night actually
    "tests green + build succeeds + one integration test that exercises the spine."
    Write the fixtures up front so the morning result is verifiable without you. If
    the project has an audit script (§1.6), fold `bash scripts/audit.sh` passing
-   into the DoD — it checks invariants the tests don't.
+   into the DoD — it checks invariants the tests don't. *(A golden oracle + fixtures-first DoD +
+   a spine test is what the field calls **behaviour evals** — verifying functional correctness,
+   the hardest control to automate (Fowler). The practice belongs here; the heavyweight
+   eval-framework machinery — datasets, graders — deliberately does not.)*
 8. **Don't trust a subagent's self-report.** When the run completes, re-run the
    DoD commands yourself and *read the test the agent wrote* — a trivially-passing
    test reports green too. A subagent's "it passed" is a claim, not proof.
