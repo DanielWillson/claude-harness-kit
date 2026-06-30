@@ -1,150 +1,216 @@
 # Claude Kickoff Kit
 
-A portable set of docs you hand to a fresh Claude Code session **at the start of a new
-project** — a setup ritual, a working philosophy, and the templates that seed a project's
-durable knowledge, health checks, and docs. It is *project-agnostic scaffolding*: used once
-per project, and **never committed into the project's own repo**.
+The Claude Kickoff Kit is a portable set of documents, handed to a fresh Claude Code session
+**at the very start of a new project**. It does three jobs at once: it walks Claude through
+setting the project up, it lays out a philosophy for how to build, and it provides templates
+that seed the project's first documentation, health checks, and safety rules.
 
-## The idea: you build the harness, not the prompt
+The kit is *scaffolding*. It works for any kind of project, in any programming language. It is
+used once, at the beginning — and it is **never copied into the project's own code**. Once a
+project is on its feet, the kit's job is done.
 
-A framing from the emerging practice around coding agents puts it cleanly: **Agent = Model +
-Harness** (Fowler). The model is fixed; what you actually shape is everything around it — the contract it reads,
-the checks it must pass, the boundaries it can't cross, the knowledge it can recall. That
-surrounding structure, far more than any single prompt, decides whether an agent does reliable
-work.
+## The big idea: an agent is a model plus a harness
 
-Two senses of "harness" sit close together, and the kit keeps them apart on purpose:
-- the **runtime** harness — Claude Code itself (the agent loop, the tools, the auto
-  classifier). You don't build this; you configure it.
-- the **durable** harness — the repo-resident scaffolding the kit produces: `CLAUDE.md`,
-  `.claude/settings.json`, `scripts/audit.sh`, `wiki/`, `README.md`, the filled-in PRD. This
-  is what the kit is *for*, and it outlives any one session or model upgrade.
+A useful way to think about coding agents has been going around the field lately, and it comes
+from Martin Fowler. The model is Claude itself, and that part is fixed — nobody using the kit is
+changing how Claude thinks. Everything *else* is the harness: the instructions the agent reads, the checks it has
+to pass, the boundaries it isn't allowed to cross, and the knowledge it can look up. That
+surrounding structure, far more than any single cleverly-worded prompt, is what decides whether
+an agent does good, reliable work.
 
-The kit's job is to stand up that durable harness in one sitting and then get out of the way.
+The word "harness" gets used two ways, and it helps to keep them apart:
+- The **runtime** harness is Claude Code itself — the program, its tools, its built-in safety
+  checks. Nobody builds this; it just gets configured.
+- The **durable** harness is the set of files the kit helps create and leaves behind in the
+  project: the agent's instruction file, its settings, a health-check script, a knowledge wiki,
+  a README for people, and a product spec. *This* is what the kit is for, and it outlasts any
+  single work session — even a future upgrade to a smarter model.
+
+The whole point of the kit is to build that durable harness in one sitting, and then step out
+of the way.
 
 ## How the pieces fit together
 
-Borrowing Fowler's vocabulary, the durable harness is a system of two kinds of control, each
-aimed at raising confidence in what the agent produces:
+Borrowing Fowler's vocabulary again, the durable harness is built from two kinds of help, both
+aimed at the same goal: making the agent's output trustworthy.
 
-- **Guides (feedforward)** steer the agent *before* it acts: `CLAUDE.md` (the always-loaded
-  contract), the PRD/spec, the styleguide and its design tokens, the load-bearing audit
-  *invariants*, and — at fan-out time — the frozen `CONTRACT.md` snapshot. These raise the
-  odds of a correct first draft.
-- **Sensors (feedback)** observe *after* it acts and let it self-correct: `scripts/audit.sh`
-  (deterministic greps + regression guards), the test suite and a machine-checkable Definition
-  of Done, adversarial plan/code review, the audience-persona panel, and the wiki's
-  reconcile-against-code pass. These catch what the guides missed.
+- **Guides** point the agent in the right direction *before* it starts working. These are
+  things like the always-on instruction file, the product spec, the design style guide, and the
+  short list of rules the project must never break. Good guides mean a better first draft.
+- **Sensors** check the agent's work *after* it acts, so mistakes get caught and corrected.
+  These are things like the automated health-check script, the test suite, a second agent
+  reviewing the first one's plan, and the wiki's habit of checking itself against the real code.
+  Good sensors catch what the guides missed.
 
-The loop closes by hand. When a sensor catches a recurring miss, you *strengthen a guide*: the
-bug becomes a permanent regression guard in the audit, the surprise becomes a one-line
-guardrail in `CLAUDE.md`, the dead end becomes a wiki incident page. That ratchet — every fixed
-mistake leaves behind something that stops it returning — is the single highest-leverage habit
-the kit installs. It is also why the docs are built to **reconcile against the code** instead of
-being trusted on faith: a guide or a knowledge page that can silently go stale is worse than
-none, because the agent will act on it with full confidence.
+(Fowler calls these "feedforward" and "feedback" controls; "guides" and "sensors" are the same
+idea in plainer words.)
 
-**Security is a separate axis — don't fold it into "guides and sensors."** The distinction the
-kit guards most carefully is that controls differ in *kind*:
+The two halves form a loop, and a person closes it by hand. When a sensor keeps catching the
+same kind of mistake, the fix isn't to nag the agent — it's to *strengthen a guide* so the
+mistake can't happen again. A bug becomes a permanent check in the health script. A nasty
+surprise becomes a one-line warning in the instruction file. A dead end becomes a written-up
+"we tried this, here's why it failed" page in the wiki. Every mistake leaves behind something
+that stops it from coming back. That habit only ever tightens, like a ratchet, and it is the
+single most valuable thing the kit installs.
 
-> the OS sandbox is the **boundary**; `deny`/`ask` rules are **deterministic backstops**; the
-> auto classifier is a **probabilistic backstop**; `CLAUDE.md` / `autoMode` prose is **not a
-> control** at all.
+It is also why the kit insists that its documents **check themselves against the actual code**,
+rather than being trusted on faith. A guide or a knowledge page that has quietly gone out of
+date is *worse* than having none at all, because the agent will follow it with total
+confidence — straight into the wrong thing.
 
-So `deny`/`ask` are *not* "guides" in Fowler's advisory sense — they don't steer, they bind, at
-action time, in every mode. Treating a hard rule as if it were soft prose (or the reverse) is
-the exact mistake the security model exists to prevent. `securing-claude-sessions.md` and
-`CHEATSHEET.md` carry this axis in full; the quality harness above rides on top of it.
+### One thing this picture leaves out: safety is a separate question
+
+Guides and sensors are about *quality*. Safety — keeping the agent from doing something
+destructive, or from leaking a secret — works differently, and the kit is careful not to blur
+the two.
+
+The key idea is that safety controls are not all equally strong. They sit in a clear pecking
+order, strongest to weakest:
+
+1. **A locked room, enforced by the operating system.** The agent runs inside a sandbox: a
+   boundary the computer itself imposes. The agent simply cannot write files outside the project
+   folder or reach out to the open internet. This is the only true wall.
+2. **Hard rules that block or pause an action.** Some actions are flatly blocked ("never read
+   the password file"). Others trigger a pause to ask a human first ("about to send code up to the
+   shared repository where teammates will get it — okay?"). These are mechanical: they fire every time, with no judgment
+   involved.
+3. **The agent's own safety judgment.** Claude has a built-in check that looks at each action
+   and decides whether it seems safe. It is good — but it is a judgment call, usually right
+   rather than guaranteed right.
+4. **Plain-text instructions.** Anything written as ordinary prose, such as the agent's
+   instruction file, is advice, not a control. The agent can misread it, or even edit it. A
+   sentence is never a safety guarantee.
+
+The practical rule that falls out of this: the safety rules that truly cannot be allowed to
+fail must live where the agent can't reach them to weaken them. The two security documents
+(`securing-claude-sessions.md` and `CHEATSHEET.md`) cover this in full; the quality harness
+above sits on top of this safety floor.
 
 ## What's in here
 
-Each entry notes what it *is* in the harness, and why it earns its place.
+Each file is labeled with what it does, and why it earns a place.
 
-- **`claude-project-kickoff.md`** — the entry point: the setup ritual (git, a sandboxed
-  `.claude/settings.json`, `CLAUDE.md`, the audit, the wiki), the ten building principles, and
-  the autonomous / multi-agent playbook. Read this first; it drives the rest. *(It defines most
-  of the guides and sensors and how to wire them together.)*
-- **`llm-wiki-kickoff.md`** — how to stand up the project's self-maintaining knowledge
-  **wiki**: the depth + decision/incident-history layer, and the project's **"system of
-  record."** Its load-bearing idea is *reconcile against ground truth, not against itself* — the
-  code is the source of truth, so a stale page is detected rather than believed. *(A sensor for
-  knowledge drift, and the home for the "we tried X, it failed because Y" history nothing else
-  captures.)*
-- **`claude-audit-base.sh`** — a stack-agnostic code-health **audit** you copy to
-  `scripts/audit.sh` and grow with each invariant and every fixed bug. *(The kit's primary
-  deterministic sensor: fast, CPU-only, runs anywhere — and where the ratchet lives.)*
-- **`prd-template.md`** — a fill-in PRD/spec skeleton (what & why, invariants, open decisions).
-  *(A guide: where the load-bearing invariants get named before any code exists, then graduate
-  into audit checks.)*
-- **`readme-template.md`** — a fill-in, **human-facing** project README stub (the project's
-  front door), with a `reconcile-code` anchor so the audit flags it when it drifts from the
-  code. *(Distinct from `CLAUDE.md`: humans read this, the agent reads the contract — keeping
-  the audiences apart is deliberate, see below.)*
-- **`styleguide.html`** — an *example* per-project design styleguide (swap in your own). *(A
-  guide for the UI layer; its tokens become the one source of truth components reference.)*
-- **`templates/`** — copy-paste **settings templates**: `managed-settings.template.json` (the
-  machine-wide hard floor), `project.settings.json` (the committed per-repo floor), and
-  `project.settings.local.json.example` (per-machine sandbox-enable + `autoMode`). See
-  `templates/README.md` for the three-layer model. *(The security axis — the boundary and the
-  deterministic backstops — not the quality harness.)*
-- **`CHEATSHEET.md`** — the verified Claude Code permission/sandbox mechanics (Bash-only
-  sandbox, deny-rules-are-a-sieve, settings precedence + array-merge, launch-dir-only load,
-  macOS egress limits).
-- **`securing-claude-sessions.md`** — a narrative **field guide** to the security model (the
-  five enforcement levels, defense-in-depth, *"a control is only as strong as the agent's
-  inability to reach it"*). The teaching companion to `CHEATSHEET.md`; written against an
-  example deployment.
+- **`claude-project-kickoff.md`** — the starting point. It is the setup checklist — version
+  control (the running history of every change), safety settings, the instruction file, the
+  health check, the wiki — plus ten principles for how to build, plus a playbook for running
+  several agents at once. Read this
+  first; it drives everything else.
+- **`llm-wiki-kickoff.md`** — how to set up the project's **wiki**: a small, self-maintaining
+  knowledge base for the deeper "how does this part work, and what have we already learned the
+  hard way" material. Its core rule is that the wiki checks itself against the code, so it can't
+  quietly drift out of date. This is where the "we tried X, it failed because Y" history lives —
+  the kind of thing nothing else records. (The idea comes from Andrej Karpathy; see the sources
+  at the end.)
+- **`claude-audit-base.sh`** — a starter **health-check script**. It gets copied into the
+  project and grown over time, gaining a new check every time a bug is fixed. It is the
+  project's fastest, most reliable sensor: an ordinary script, no AI involved, that runs
+  anywhere.
+- **`prd-template.md`** — a fill-in-the-blanks **product spec**: what's being built, why, and
+  which rules must always hold. It is a guide — the place those must-never-break rules get named
+  before any code exists.
+- **`readme-template.md`** — a fill-in-the-blanks **README for people** — the project's front
+  door. It explains what the project is and how to run it, in plain language, for a reader who
+  may not be an engineer. (Deliberately separate from the agent's instruction file: people read
+  this one, the agent reads that one.)
+- **`styleguide.html`** — an *example* design style guide, for a project with a user interface
+  (swap in a real one). It defines the project's colors, spacing, and fonts in one place, so the
+  look stays consistent across screens.
+- **`templates/`** — copy-paste **settings files**, in three layers: a machine-wide locked floor
+  only an administrator can change, a per-project file that travels with the code, and a
+  per-machine file for local preferences. `templates/README.md` explains the three layers. (This
+  is the safety side of things, not the quality harness.)
+- **`CHEATSHEET.md`** — a terse, verified reference for exactly how Claude Code's permission and
+  sandbox machinery behaves. For when the precise mechanics matter.
+- **`securing-claude-sessions.md`** — a plain-English **field guide** to the safety model: the
+  pecking order above, told as a story, with the rule of thumb that *a control is only as strong
+  as the agent's inability to reach it*. The teaching companion to the cheat sheet.
 
 ## How to use it
 
-At a new project's kickoff, hand Claude the relevant files (always the kickoff guide; the
-others as the project needs them). Claude runs the setup, internalizes the principles, and
-produces the project's **durable artifacts** — `CLAUDE.md`, `.claude/settings.json`,
-`scripts/audit.sh`, `wiki/`, `README.md`, and the filled-in PRD. *Those* live in the project
-repo; this kit does not. After buildout the kit drops away — ongoing work reads the project's
-lean `CLAUDE.md` + wiki, never this kit.
+At the start of a new project, the relevant files are handed to a fresh Claude session (always
+the kickoff guide; the rest as the project needs them). Claude runs the setup, takes the
+principles on board, and produces the project's lasting files: the instruction file, the
+settings, the health-check script, the wiki, the README, and the filled-in spec. *Those* live
+in the project's code. The kit itself does not. After setup, the kit drops away — day-to-day
+work reads the project's own slim instruction file and wiki, never the kit again.
 
-The autonomy posture this enables is, in the field's words, **"humans steer, agents execute"**
-(OpenAI) — read precisely. *Steering* means setting the deterministic `deny`/`ask` gates and
-reviewing small commits after the fact; it does **not** mean approving each step (that fights
-autonomy) or stating a boundary in chat (which is lost when context compacts). *Execution* is
-hands-off auto mode plus adversarial-*agent* review.
+The working relationship this sets up is, in OpenAI's phrase, **"humans steer, agents
+execute."** But "steer" means something specific here. Steering is *setting the boundaries up
+front and reviewing the work in small batches afterward.* It is **not** approving every
+individual step (that would defeat the point of an agent that can run on its own), and it is
+**not** a casual instruction dropped into chat (those get forgotten the moment the conversation
+is summarized to save space). The agent works largely unattended, and a second agent reviews its
+plans.
 
-## Design stance
+## The thinking behind it
 
-- **Self-improving knowledge** — the wiki (and the project README) reconcile against the code,
-  so docs can't silently rot. A knowledge base trusted on faith decays into confident lies; one
-  checked against ground truth decays *visibly*, which is the only kind of decay you can act on.
-  It's the knowledge analogue of *"keep quality left"* (Fowler): catch drift continuously and
-  cheaply, rather than discovering it the moment an agent builds on a stale page.
-- **Lean on the repo, not machine-local memory** — project knowledge lives in the repo (wiki +
-  `CLAUDE.md` + commit bodies); memory is for user-level preferences only, and a
-  project-specific fact never goes in global `~/.claude/CLAUDE.md` (it would pollute every other
-  project). Default any project fact to the wiki. The governing line, in the field's words:
-  *"anything [the agent] cannot access in context at runtime does not exist"* (OpenAI) — so the
-  contract is a lean **table of contents**, not an encyclopedia, with the depth one pointer
-  away.
-- **Three audiences, three docs, no overlap** — the human `README` (front door), the agent
-  `CLAUDE.md` (always-loaded invariants + pointers), and the wiki (on-demand depth + history).
-  Most agent setups collapse the first two; keeping them apart is what lets the contract stay
-  lean *and* the human doc stay readable, each reconciled against the code its own way.
-- **Tool-agnostic by the repo, not by one agent** — the durable rules live where *any* tool
-  reads or runs them: the contract's *content* (read by any LLM/tool/human) and the audit (run
-  on demand or in CI). Claude-specific machinery (the Stop-hook auto-commit,
-  `.claude/settings.json`, `/wiki`) is a convenience *adapter* on top. When a second committer
-  is in play (another LLM, a teammate, CI), a coarse secret-only `git` pre-commit hook + the
-  audit-in-CI carry the guarantee (kickoff §1.3b). Auto-commit itself can't be made
-  tool-agnostic — git has no commit-on-change event — so only the *rules* travel, not the *act*
-  of committing.
-- **Scaffolding vs. artifacts** — the kit is used once; only its outputs persist (the audit
-  even warns if a kit source file gets committed into a project).
-- **The hard floor is machine-level, not repo-level** — the un-negotiable *security* floor
-  (no-bypass, credential denies, the OS sandbox) lives in **root-owned managed settings + the OS
-  sandbox** (kickoff **Part 0**), because a committed `.claude/settings.json` is agent-editable
-  and therefore *soft*. The committed per-repo floor still carries project specifics and the
-  gates that should travel to teammates; array-merge keeps both layers live at once. The model:
-  *the sandbox is the boundary; `deny`/`ask` are deterministic backstops; the classifier is
-  probabilistic; prose is not a control* (see `CHEATSHEET.md`).
+- **Knowledge that keeps itself honest.** The wiki and the README both check themselves against
+  the code, so the documentation can't silently rot. A knowledge base trusted on faith slowly
+  fills with confident-sounding lies; one that is checked against the real code goes out of date
+  *visibly*, which is the only kind of out-of-date anyone can actually fix. (Fowler calls the
+  general habit "keeping quality left" — catching problems early and cheaply, instead of
+  discovering them once the agent has already built on bad information.)
+- **Keep knowledge in the project, not in the agent's private memory.** What the project knows
+  lives in the project's own files: the wiki, the instruction file, and the notes attached to
+  each saved change. The agent's personal memory is only for personal working-style preferences,
+  never project facts. (A fact about *this* project, saved into the agent's global memory, would
+  leak into every other project it ever works on.) As OpenAI puts it, from the agent's point of
+  view *anything it can't see at the moment it's working doesn't exist* — so the instruction file
+  is kept short, a table of contents that points to the deeper material rather than trying to
+  hold all of it.
+- **Three readers, three documents, no overlap.** The README is for people. The instruction
+  file is for the agent, and stays short. The wiki is for depth and history, read only when
+  needed. Most setups merge the first two; keeping them apart is what lets the agent's file stay
+  lean *and* the human's file stay readable.
+- **Rules any tool can follow, not tied to one agent.** The durable rules live where
+  anything can read or run them: the instruction file (any AI, any tool, or any person can read
+  it) and the health-check script (which runs on its own, or as part of an automated pipeline —
+  the machinery that runs checks on every change without anyone starting it by hand).
+  The Claude-specific conveniences — like an automatic save at the end of each session — are a
+  nice-to-have layer on top. When more than one thing changes the project (another AI tool, a
+  human teammate, an automated pipeline), a couple of tool-neutral safety nets carry the
+  guarantees instead.
+- **Used once, then gone.** The kit is scaffolding; only what it produces sticks around. (The
+  health check even warns if a kit file ever gets copied into a project by mistake.)
+- **The hardest safety rules belong at the machine level, not inside the project.** Here is the
+  reasoning, step by step. A settings file that lives *inside* the project can be edited by the
+  agent — so it is useful, but it is "soft": it can't be trusted to hold a line a determined
+  agent wants to cross. The non-negotiable safety rules — no overriding the safety system, no
+  reading credentials, the locked room — therefore live somewhere the agent can't touch: a
+  settings file owned by the computer's administrator, plus the operating-system sandbox. The
+  in-project settings file still does real work, carrying the project's own specifics and the
+  rules meant to travel to teammates, and the two layers add together rather than fighting. But
+  the unbreakable floor sits one level down, out of the agent's reach. (The short version: the
+  sandbox is the wall; block-and-pause rules are mechanical backstops; the agent's own judgment
+  is a good guess; plain prose is not a control at all.)
 
-> The styleguide and PRD are interchangeable per project; the guides and templates are the
+## Where these ideas come from
+
+The kit didn't invent this approach. It assembles a set of ideas the field has been working out
+in the open over the past year. Each of these is worth reading directly:
+
+- **Martin Fowler — *Harness engineering for coding agent users.*** The guides-and-sensors
+  framing, the habit of "keeping quality left," and the idea of building up a project's harness
+  over time. [martinfowler.com](https://martinfowler.com/articles/harness-engineering.html)
+- **OpenAI — *Harness engineering: leveraging Codex in an agent-first world.*** "Humans steer,
+  agents execute," the instruction file as a "table of contents" rather than an encyclopedia,
+  and the project's knowledge base as its "system of record."
+  [openai.com](https://openai.com/index/harness-engineering/)
+- **Stripe — *Minions: one-shot, end-to-end coding agents.*** What it takes to run agents from
+  request to finished change on a real, enormous codebase, with mechanical safety steps wired
+  into the agent's loop.
+  [stripe.dev](https://stripe.dev/blog/minions-stripes-one-shot-end-to-end-coding-agents)
+- **Andrej Karpathy — the *LLM wiki* pattern (April 2026).** The direct inspiration for the
+  kit's wiki. The insight: instead of having an AI re-read raw documents from scratch on every
+  question, have it build and maintain a structured wiki of plain notes that *compounds* over
+  time — *"Obsidian is the IDE; the LLM is the programmer; the wiki is the codebase"* (in
+  plainer terms: the note-taking app is the workshop, the AI does the writing, and the wiki is
+  the thing being built). The tedious part of any knowledge base is the bookkeeping, and, as
+  Karpathy puts it, "LLMs don't get bored, don't forget to update a cross-reference, and can
+  touch 15 files in one pass." The kit applies this
+  to a *codebase* specifically: the running code is the source of truth, and every wiki page is
+  continuously checked back against it.
+  [gist.github.com](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)
+
+> The style guide and spec are swapped out per project; the guides and templates are the
 > reusable core.
