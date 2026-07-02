@@ -492,6 +492,13 @@ regardless of mode. But know what it does **not** cover:
   servers you trust** (`enabledMcpjsonServers`) rather than auto-loading whatever a
   `.mcp.json` declares; same posture as the trusted-repo boundary. (Inert for an MCP-free
   project.)
+- **Skills and plugins are installed *instructions* — vet them like dependencies.** A skill
+  is prose the agent follows (often plus scripts it runs); installing one puts its author
+  inside the prompt-level trust boundary — prompt injection you opted into, on every
+  session where it triggers. Apply Principle 8 to the harness itself: few skills, authors
+  you trust, **read the SKILL.md and its scripts before installing**, and prefer a
+  pinned/vendored copy over anything self-updating. The same layer rule applies: a skill is
+  Level-A prose — it can *steer* the agent but cannot move a deny/ask gate or the sandbox.
 - **Prompt injection via untrusted CONTENT — files *and* issue/PR/web/tool output.** If
   Claude reads anything carrying adversarial instructions — a malicious dependency, a test
   fixture, user-generated content, an **issue body, a PR title, a fetched web page, or a
