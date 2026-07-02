@@ -95,6 +95,12 @@ Each file is labeled with what it does, and why it earns a place.
   health check, the wiki — plus ten principles for how to build, plus a playbook for running
   several agents at once. Read this
   first; it drives everything else.
+- **`claude-project-adoption.md`** — the same harness for a project that **already
+  exists**. It re-sequences the kickoff guide around one inversion — the first job is to
+  not break what works: inventory first, the safety floor plus secret triage, a pinned
+  oracle *before* any improvement, a contract written from evidence, a wiki seeded from
+  real git/issue history, then the ratchet. Hand a session this file instead of the
+  kickoff guide when retrofitting.
 - **`llm-wiki-kickoff.md`** — how to set up the project's **wiki**: a small, self-maintaining
   knowledge base for the deeper "how does this part work, and what have we already learned the
   hard way" material. Its core rule is that the wiki checks itself against the code, so it can't

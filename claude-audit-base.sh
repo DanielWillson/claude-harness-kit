@@ -197,7 +197,7 @@ if git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1; then
     # every future session's context for nothing. WARN if any source file is tracked. (The
     # outputs have different names, so this won't flag them; the styleguide is excluded since
     # it may legitimately live in the repo as a design reference.)
-    tracked_kit=$(git -C "$ROOT" ls-files | grep -iE '(^|/)(claude-project-kickoff|llm-wiki-kickoff|claude-audit-base|prd-template|readme-template)\.(md|sh)$' || true)
+    tracked_kit=$(git -C "$ROOT" ls-files | grep -iE '(^|/)(claude-project-kickoff|claude-project-adoption|llm-wiki-kickoff|claude-audit-base|securing-claude-sessions|prd-template|readme-template)\.(md|sh)$' || true)
     [ -n "$tracked_kit" ] && { warn "Kickoff Kit scaffolding committed — it's one-time; keep sources out of the repo (outputs persist, sources don't)"; echo "$tracked_kit" | sed 's/^/       /'; } \
                           || pass "no Kickoff Kit scaffolding committed"
     # Secret pre-commit hook actually enabled? (kickoff §1.3b) A tracked hooks/ dir only

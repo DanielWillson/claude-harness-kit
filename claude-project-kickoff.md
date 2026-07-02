@@ -3,7 +3,9 @@
 > **Purpose.** Hand this file to a fresh Claude Code session *before* sharing the
 > project spec. It establishes how we set up a new project and the principles we
 > build by. It is **not** a `CLAUDE.md` (that describes a specific codebase); this
-> is a portable, project-agnostic starting ritual + working philosophy.
+> is a portable, project-agnostic starting ritual + working philosophy. *(Retrofitting
+> an **existing** project instead? Drive from `claude-project-adoption.md`, which
+> re-sequences this guide for a live codebase.)*
 >
 > **How to use it (Claude, read this):** Execute Part 1 (setup) immediately,
 > adapting the stack-specific bits to whatever stack the user names. Internalize

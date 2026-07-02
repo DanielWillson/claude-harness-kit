@@ -1,21 +1,28 @@
 ---
 name: project-kickoff
 description: >
-  Set up a brand-new project the Kickoff Kit way: machine + repo safety floor, tailored
-  settings, a CLAUDE.md contract, a health-check audit, a knowledge wiki, a human README,
-  and the building principles. Use when the user is starting a new project from scratch,
-  asks to "run the kickoff" / "kick off this project", or wants a project setup ritual.
-  NOT for ongoing work in a project that is already set up.
+  Set up a project the Kickoff Kit way: machine + repo safety floor, tailored settings, a
+  CLAUDE.md contract, a health-check audit, a knowledge wiki, a human README, and the
+  building principles. Two flows: KICKOFF for a brand-new project ("run the kickoff",
+  "kick off this project", project scaffolding) and ADOPTION for retrofitting the same
+  harness onto an existing codebase ("adopt the kit", "retrofit the harness", "bring this
+  project up to the kit's standards"). NOT for ordinary day-to-day work in a project that
+  already has the harness.
 ---
 
 # Project Kickoff (the Kickoff Kit, as a skill)
 
 This skill packages the **Claude Kickoff Kit** — a portable, stack-agnostic setup ritual
-plus building philosophy for brand-new projects. The kit's documents live in this same
-directory. Drive the ritual **from the kickoff guide**; read companions only when a step
-calls for them.
+plus building philosophy. The kit's documents live in this same directory.
 
-## How to run it
+**Pick the flow first:**
+- **Brand-new project** → drive from `claude-project-kickoff.md` (steps below).
+- **Existing, working project** → drive from `claude-project-adoption.md` instead: it
+  re-sequences the same kit for a live codebase (inventory first, don't break what works,
+  pin an oracle before improving anything, seed the wiki from real history). It points
+  back into the kickoff guide's sections as it goes — keep both at hand.
+
+## How to run a kickoff (new project)
 
 1. Read `claude-project-kickoff.md` — the driver. It contains the one-time machine
    hardening (Part 0), the per-project setup ritual with its nine-question intake

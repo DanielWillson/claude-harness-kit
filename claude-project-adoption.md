@@ -1,0 +1,122 @@
+# Claude Code — Existing-Project Adoption Guide
+
+> **Purpose.** Hand this file to a Claude Code session inside an **existing, working
+> project** to retrofit the Kickoff Kit's harness onto it. The kickoff guide
+> (`claude-project-kickoff.md`) assumes greenfield; this guide re-sequences it for a
+> codebase that already runs, already has habits, and already has history. It **points at**
+> the kickoff guide's sections rather than restating them — keep both files at hand, read
+> the pointed-to section when you reach it.
+>
+> **The one posture change from greenfield:** in a new project the first job is to build;
+> here the first job is to **not break what works**. Everything below is ordered around
+> that inversion. The kit's boundary still holds: this guide and its companions are used
+> once and never committed into the project (the audit warns if they are).
+
+---
+
+## 0. Inventory before anything (read-only — no edits in this step)
+
+A retrofit is gap-driven, not checklist-driven. Before proposing anything, build the map:
+
+- **What already exists of the harness, under other names.** An `AGENTS.md`/`CLAUDE.md`, a
+  `docs/` tree, a Makefile/CI pipeline (those are sensors), lint/format configs, git hooks,
+  a test suite. The kit *adapts to* working machinery — it never replaces a sensor that
+  already fires with a kit-flavored equivalent (an operator lesson the field keeps
+  re-learning: harness automation must earn its keep, per line, against what's already
+  there).
+- **The safety facts.** Is a secret **already tracked in git**? (`git log` doesn't forget:
+  check history, not just the working tree.) Is there a `.claude/settings.json` and what
+  does it allow? Who else commits — humans, CI, other tools? What are the real sensitive
+  paths?
+- **The trust facts.** Which tests does the team actually trust? Which module does
+  everyone fear touching? What broke repeatedly in the last six months (`git log`, the
+  issue tracker)? Those answers are the seed content for the audit and the wiki.
+- **The intake questions** (kickoff §1.0a) all still apply — several are *easier* here
+  because the repo itself answers them (stack, daily commands, deploy target). Confirm
+  against evidence, don't re-ask what the manifest already states.
+
+Deliverable of this step: a short written gap list — have it adversarially reviewed
+(Principle 6) before touching anything.
+
+## 1. The floor — first edit, same as greenfield (kickoff §1.3, Part 0)
+
+The per-repo floor is not gap-driven; it is unconditional and identical to greenfield:
+committed `.claude/settings.json` with secret-read denies, enforcement-file denies, the
+`ask` gate on push/merge, the Stop hook — on top of the Part 0 machine floor. Two
+adoption-specific additions:
+
+- **A tracked secret is a live incident, not a checklist item.** If step 0 found one:
+  gitignore it, `git rm --cached`, **rotate the credential** (history still holds it — a
+  purge is a separate, risky operation; see the kickoff's §1.3 note on why an in-tree
+  `.git` copy can silently undo one), and add the audit's tracked-secret FAIL so it can't
+  recur. Do this before any other adoption work.
+- **Don't break the team's flow.** If other committers exist (intake Q6), the floor's
+  `ask`/deny additions land as a PR with one-line rationales, not a silent settings change
+  — the floor protects the repo *from the agent*; it shouldn't ambush the humans.
+
+## 2. Pin the oracle before improving anything (Principle 10, promoted to step 2)
+
+In greenfield, Principle 10 is an appendix concern; in adoption it is the second thing you
+do. The project's current behavior is the asset. Capture it while it's still true:
+
+- Wire the audit skeleton (`claude-audit-base.sh` → `scripts/audit.sh`, kickoff §1.6) with
+  the **TOOLING section pointed at the commands the team already runs** — the audit's
+  first job here is to make the existing sensors one-command runnable, not to add new
+  opinions.
+- If there's a calculation/aggregation layer, capture **golden outputs** from the current
+  code as a committed test now — before any harness-motivated refactor tempts anyone.
+- If there's no test the team trusts, one **spine test** (end-to-end through the core
+  path) is worth more than any document this guide produces. Build it first.
+
+## 3. CLAUDE.md from evidence, not aspiration (kickoff §1.5)
+
+Write the contract from what the code and history *prove*, not what anyone wishes were
+true — a plausible-but-false line is worse than no line, because the agent follows it with
+confidence:
+
+- Invariants come from step 0's "what broke repeatedly" list and the code's actual
+  conventions. Every line is reconciled against the code at birth: if you can't point at
+  the file that makes it true, it doesn't go in.
+- If an `AGENTS.md`/`CLAUDE.md` already exists, **edit it in place** toward the kickoff
+  skeleton (§1.5) — keep one physical file (symlink the other name), keep what's true,
+  delete what the code contradicts, and apply the size discipline (§1.5's sourced numbers).
+- The knowledge-routing block (§1.5's "Knowledge & memory") goes in verbatim — it's what
+  keeps the rest of the adoption from silting into machine-local memory.
+
+## 4. Seed the wiki from history — richest step of a retrofit (wiki guide §5)
+
+An existing project has what greenfield lacks: **real incidents and real decisions**. The
+wiki guide's build steps (§5) apply as written — inventory, boundaries, scaffold, migrate
+by *moving not rewriting* (§2.3), fix references, wire the engine. The adoption-specific
+gold: mine `git log`, the issue tracker, and postmortem threads for the first 3–5
+**incident/decision pages** — the "we tried X, it failed because Y" record that stops the
+next agent (and the next hire) from re-walking dead ends. If existing docs are good,
+relocate them and add frontmatter; regenerating them is the anti-pattern.
+
+Scale honestly (wiki guide §1): a small stable project may stop at detailed commit bodies
+plus audit guards; graduate to the wiki when the project outgrows them.
+
+## 5. Ratchet forward — adoption is a habit, not a sprint
+
+Everything after the floor + oracle arrives **incrementally, pulled by real events**, not
+as a big-bang harness sprint that halts feature work:
+
+- Every bug fixed from now on leaves the kit's three artifacts (Principle 2's routing
+  rule): a guardrail line, an audit grep, a wiki incident page. Six weeks of ordinary work
+  builds more real harness than any retrofit weekend.
+- The maturity triggers (kickoff §1.3a) fire on the same intake answers as greenfield:
+  first real credential → the secret add-ons; a second committer → server-side branch
+  protection + CODEOWNERS + audit-in-CI (§1.3b).
+- Part 3 (multi-agent/autonomous work) adopts last, and only when a task genuinely fans
+  out — its probe-first discipline applies unchanged.
+
+## Order recap and Definition of Done
+
+**Inventory → floor (+ secret triage) → oracle/audit → CLAUDE.md → wiki seed → ratchet.**
+
+Adoption is *done enough* when: the floor is committed and **proven to bite** (kickoff
+§1.4 — a denied secret read actually blocks); `bash scripts/audit.sh` runs the team's real
+checks and FAILs on a tracked secret; `CLAUDE.md` exists with only evidence-backed lines
+and the knowledge-routing block; the wiki holds at least three real incident/decision
+pages (or the project has consciously deferred it); and the next fixed bug leaves all
+three artifacts behind. Everything else is the ratchet's job.
