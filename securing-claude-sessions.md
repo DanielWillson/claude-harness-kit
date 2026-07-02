@@ -111,6 +111,25 @@ for something that really matters.
 > **Teaching point:** Level A is convenience with a safety-minded default. Treat it as the
 > helpful first filter, then put hard limits underneath it.
 
+**Also at Level A — the model's own refusals (a control you don't install).** Distinct from
+the auto-mode classifier, the model itself ships with trained refusals and, on some models,
+response classifiers with named categories (Claude's Fable 5, for example, documents
+categories for cyber/bio misuse and for "reasoning extraction" — being asked to reproduce
+its hidden internal reasoning; asking it to *explain the rationale for its decisions* in
+ordinary output is fine, and is in fact Anthropic's own recommended style). Three things to
+know about this layer:
+- **You didn't install it and you can't tune it.** It arrives with the model and changes
+  with model versions. It's real protection in practice — and still Level A: a judgment
+  call inside the model's behavior, never the wall you rely on.
+- **Don't design around it in either direction.** Don't count on it to catch what your deny
+  rules miss, and don't fight it — a refusal mid-run is signal to reconsider or rephrase,
+  not an obstacle to prompt around.
+- **When an action is blocked, identify *which* layer said no** before reacting. A model
+  refusal, a deny rule, a sandbox failure, and a classifier block all read as "it wouldn't
+  do it," but the remedy differs completely: rephrase or reconsider (refusal) vs. add a
+  rule/host/path (config) vs. it was genuinely dangerous (working as intended).
+  Misattributing the layer is how people burn an evening loosening the wrong control.
+
 ---
 
 ### Level B — In the project config: allow/ask rules & the hook
