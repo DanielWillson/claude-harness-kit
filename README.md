@@ -29,7 +29,7 @@ The word "harness" gets used two ways, and it helps to keep them apart:
 The whole point of the kit is to build that durable harness in one sitting, and then step out
 of the way.
 
-## If you're skeptical of AI coding, start here
+## Start skeptical
 
 Skepticism is the right starting posture. The failure modes are real, measured, and
 published — several by the model's own maker:
