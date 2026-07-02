@@ -77,6 +77,15 @@ it travels with the repo*:
   project-specific. If project knowledge is trapped in the store, migrate it into the repo
   (wiki for depth, contract for invariants) and leave behind at most a one-line pointer.
 
+*Name the seam, because modern harness memory looks like this wiki:* current auto-memory
+stores are themselves wiki-shaped — an index file plus small, cross-linked notes. The
+pattern is not what separates them. Two properties do: **transport** (memory is
+machine-local; the wiki rides the repo to every clone, tool, and teammate) and — the
+load-bearing one — **ground truth** (memory has nothing to reconcile against, so a stale
+memory goes wrong *invisibly*; a wiki page names its `code:` and goes stale *visibly*,
+§2.1). Same shape; only one has a truth loop. That, not the format, is why project facts
+belong here and not there.
+
 These are the *memory* layers. A fourth, non-memory layer — the **audit** (a grep script,
 kickoff §1.6) — *enforces* invariants rather than storing knowledge. The full routing
 across all four is the kickoff's one-liner: guardrail → contract, machine-check → audit,
