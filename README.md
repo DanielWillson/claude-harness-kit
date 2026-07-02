@@ -29,6 +29,40 @@ The word "harness" gets used two ways, and it helps to keep them apart:
 The whole point of the kit is to build that durable harness in one sitting, and then step out
 of the way.
 
+## If you're skeptical of AI coding, start here
+
+Skepticism is the right starting posture. The failure modes are real, measured, and
+published — several by the model's own maker:
+
+- Agents **mark work "complete" without testing it.** An agent stops when the work *looks*
+  done; unless you hand it a check it can actually run, "looks done" is the only signal it
+  has (Anthropic, measured on its own models).
+- Asked to grade their own work, agents *"confidently praise it — even when mediocre"*
+  (Anthropic again; their fix, like this kit's, is a separate judge with a fresh context).
+- An LLM's recall **degrades as its context grows**, and its instruction-following sags
+  once a rules file holds a few hundred discrete instructions — so every document you feed
+  it is a budget, not a bucket.
+- Agents follow the documents they're given **with total confidence — including stale and
+  contradictory ones.** One measured case found an agent burning ~40% of its time deciding
+  which of several conflicting docs to trust.
+- The safety classifier that reviews agent actions **misses ~17% of genuinely overeager
+  actions** — which is why this kit never treats judgment (the model's or a classifier's)
+  as a wall, only boundaries the agent can't reach.
+
+The point of this kit is not that these problems are fake. It's that every one of them has
+an *engineering* answer, and none of the answers is "hope the model is smart": executable
+checks instead of trust, independent review instead of self-report, OS- and server-enforced
+boundaries instead of instructions that might be misread, and documents that verify
+themselves against the code instead of quietly rotting. That is what "harness" means — and
+it's the same shape as the machinery you already build around fallible humans (code review,
+CI, least privilege, postmortems), aimed at a collaborator that works at a hundred times
+the volume. The payoffs are measured too: sandboxing cut approval interruptions by **84%**
+while *hardening* the boundary; consolidating contradictory docs cut one team's token bill
+by **~75%**.
+
+The extended version of this argument — every claim sourced and dated — is
+[`LESSONS.md`](LESSONS.md).
+
 ## How the pieces fit together
 
 Borrowing Fowler's vocabulary again, the durable harness is built from two kinds of help, both
@@ -130,6 +164,10 @@ Each file is labeled with what it does, and why it earns a place.
 - **`securing-claude-sessions.md`** — a plain-English **field guide** to the safety model: the
   pecking order above, told as a story, with the rule of thumb that *a control is only as strong
   as the agent's inability to reach it*. The teaching companion to the cheat sheet.
+- **`LESSONS.md`** — the **field lessons** behind the kit, written for a human leveling up
+  on LLMs: the measured failure modes, the engineering answers to each, the numbers worth
+  memorizing, and a three-item reading list. Start here if you want to *understand* before
+  you *install*.
 - **`SKILL.md`** — the wrapper that lets the whole kit double as an installable **skill**
   (see "How to use it" below). It adds a second delivery mechanism, not new content.
 - **`wiki/`** — the kit's **own knowledge base**, eating its own cooking: the verified
