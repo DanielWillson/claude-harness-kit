@@ -14,9 +14,16 @@
 
 ---
 
-## 0. Inventory before anything (read-only — no edits in this step)
+## 0. Evaluate → interview → propose (no edits until the user approves the plan)
 
-A retrofit is gap-driven, not checklist-driven. Before proposing anything, build the map:
+A retrofit is gap-driven, not checklist-driven — and the repo's owner holds context no
+file can give you. This step has three beats, in order, and **nothing gets edited until
+the third is approved**.
+
+### 0a. Evaluate the repo — read-only, and thorough
+
+Build the map before forming opinions (fan the broad sweeps out to subagents, Part 3.13 —
+the map matters more than any single file):
 
 - **What already exists of the harness, under other names.** An `AGENTS.md`/`CLAUDE.md`, a
   `docs/` tree, a Makefile/CI pipeline (those are sensors), lint/format configs, git hooks,
@@ -28,15 +35,39 @@ A retrofit is gap-driven, not checklist-driven. Before proposing anything, build
   check history, not just the working tree.) Is there a `.claude/settings.json` and what
   does it allow? Who else commits — humans, CI, other tools? What are the real sensitive
   paths?
-- **The trust facts.** Which tests does the team actually trust? Which module does
-  everyone fear touching? What broke repeatedly in the last six months (`git log`, the
-  issue tracker)? Those answers are the seed content for the audit and the wiki.
-- **The intake questions** (kickoff §1.0a) all still apply — several are *easier* here
-  because the repo itself answers them (stack, daily commands, deploy target). Confirm
-  against evidence, don't re-ask what the manifest already states.
+- **The evidence facts.** What does `git log` say breaks repeatedly? Where do the tests
+  actually exercise behavior vs. merely exist? What conventions does the code follow *in
+  practice* (not what the docs claim)? Which docs contradict the code or each other —
+  contradictory docs are a measured, first-order tax on every future agent session.
 
-Deliverable of this step: a short written gap list — have it adversarially reviewed
-(Principle 6) before touching anything.
+### 0b. Interview the user — ask what the code can't answer
+
+The kickoff intake (§1.0a) still applies, but invert the default: **confirm from evidence
+what the repo already states** (stack, daily commands, deploy target) and spend the
+questions on what only the owner knows:
+
+- Which tests do you actually trust? Which module does everyone fear touching?
+- What has burned you repeatedly? What almost-shipped incident still worries you?
+- What's about to change — a planned migration, a rewrite, a new committer? (Harness work
+  on code that's about to be replaced is waste; a new committer changes the §1.3b answer.)
+- How much ceremony will this team realistically sustain? (A gate people disable is worse
+  than no gate.)
+- Anything the evaluation left ambiguous — a convention you *inferred*, a doc-vs-code
+  contradiction you can't adjudicate. Ask rather than guess: a wrong line baked into
+  `CLAUDE.md` does more damage than a question asked twice, because the agent follows it
+  with confidence.
+
+Ask in **one batch**, not a drip (same rule as the kickoff intake).
+
+### 0c. Propose — a written plan the user approves before anything changes
+
+Write the proposal: the gap list; what you'd add or change, **in what order and why**;
+what you'd explicitly *not* do (the existing sensors that stay, the kit pieces this
+project doesn't need); and the risk each change carries to current behavior. Have it
+adversarially reviewed (Principle 6), then put it to the user. In an existing project the
+proposal *is* this step's product — the edits are what happens after a yes. (This is the
+interview → written-spec → execute shape Anthropic's own best-practices guidance
+recommends for feature work, applied to the harness itself.)
 
 ## 1. The floor — first edit, same as greenfield (kickoff §1.3, Part 0)
 
@@ -112,7 +143,8 @@ as a big-bang harness sprint that halts feature work:
 
 ## Order recap and Definition of Done
 
-**Inventory → floor (+ secret triage) → oracle/audit → CLAUDE.md → wiki seed → ratchet.**
+**Evaluate → interview → propose (approved) → floor (+ secret triage) → oracle/audit →
+CLAUDE.md → wiki seed → ratchet.**
 
 Adoption is *done enough* when: the floor is committed and **proven to bite** (kickoff
 §1.4 — a denied secret read actually blocks); `bash scripts/audit.sh` runs the team's real

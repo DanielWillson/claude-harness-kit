@@ -18,9 +18,11 @@ plus building philosophy. The kit's documents live in this same directory.
 **Pick the flow first:**
 - **Brand-new project** → drive from `claude-project-kickoff.md` (steps below).
 - **Existing, working project** → drive from `claude-project-adoption.md` instead: it
-  re-sequences the same kit for a live codebase (inventory first, don't break what works,
-  pin an oracle before improving anything, seed the wiki from real history). It points
-  back into the kickoff guide's sections as it goes — keep both at hand.
+  re-sequences the same kit for a live codebase, and its first step is three gated beats —
+  **evaluate** the repo thoroughly (read-only), **interview** the user for what the code
+  can't answer, then **propose** a written, adversarially-reviewed plan the user approves
+  *before any edit*. Only then: floor, oracle, contract, wiki-from-history. It points back
+  into the kickoff guide's sections as it goes — keep both at hand.
 
 ## How to run a kickoff (new project)
 
