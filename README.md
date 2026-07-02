@@ -124,11 +124,22 @@ Each file is labeled with what it does, and why it earns a place.
 - **`securing-claude-sessions.md`** — a plain-English **field guide** to the safety model: the
   pecking order above, told as a story, with the rule of thumb that *a control is only as strong
   as the agent's inability to reach it*. The teaching companion to the cheat sheet.
+- **`SKILL.md`** — the wrapper that lets the whole kit double as an installable **skill**
+  (see "How to use it" below). It adds a second delivery mechanism, not new content.
 
 ## How to use it
 
-At the start of a new project, the relevant files are handed to a fresh Claude session (always
-the kickoff guide; the rest as the project needs them). Claude runs the setup, takes the
+Two ways to hand the kit to a fresh session:
+
+- **Point a session at the files** (works anywhere): give it the kickoff guide and let it
+  pull the rest as each step needs them.
+- **Install the kit as a skill** (one time): clone or symlink this repo to
+  `~/.claude/skills/project-kickoff` — the `SKILL.md` at the repo root makes the whole kit
+  double as a skill package. From then on, saying "kick off a new project" in any session
+  triggers the ritual, with the documents loaded on demand instead of pasted up front.
+  Nothing else changes: the kit still never enters the project it sets up.
+
+Either way: at the start of a new project, Claude runs the setup, takes the
 principles on board, and produces the project's lasting files: the instruction file, the
 settings, the health-check script, the wiki, the README, and the filled-in spec. *Those* live
 in the project's code. The kit itself does not. After setup, the kit drops away — day-to-day
