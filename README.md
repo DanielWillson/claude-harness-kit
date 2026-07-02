@@ -135,8 +135,9 @@ Nothing is mandatory, and the posture matters more than any list: a skill or plu
 rule). With that said, the shortlist that survived a primary-source check: Anthropic's own
 **`security-guidance`**, the **LSP plugin** for your language, and **`frontend-design`**
 for UI work — all in the built-in official marketplace. The community standout by adoption
-is **`superpowers`** (obra) — actively maintained, and a code audit this kit ran found it
-clean — but it is token-hungry and opinionated about workflow, with credible operator
+is **`superpowers`** (obra) — actively maintained, and clean under a hands-on code audit
+(hooks inject only local content; its one disclosed phone-home honors the opt-out env
+vars) — but it is token-hungry and opinionated about workflow, with credible operator
 dissent: an optional methodology add-on, never a default. Lists like this one go stale;
 re-check adoption and read the `SKILL.md` yourself before trusting anything here.
 
