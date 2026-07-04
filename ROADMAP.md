@@ -142,6 +142,16 @@ protecting but doesn't complain (false security).
 - **Build:** each safeguard also asserts its target still exists (fail loudly if the anchor is gone);
   or a periodic coverage check flags safeguards whose target vanished — mirror the wiki's
   `stale`/`coverage` check, pointed at the audit script.
+- **Built 2026-07-04:** a `guarded "<what>" "<anchor-file>" "<symbol|''>" && { … }` helper in
+  `claude-audit-base.sh` that confirms the anchor resolves before the real check runs — anchor gone →
+  **WARN loudly and skip the body**, so a lost anchor never reads as `pass`; plus a **`SAFEGUARD
+  SELF-CHECK`** section ("audit the audit") that rolls up the anchored guards exercised this run and
+  names the rotted ones (registry-based, so it can't false-positive a live guard — mirrors the wiki's
+  `stale`/`coverage`). The rot-prone template guards (INVARIANTS #1/#3, the regression example) were
+  converted; whole-dir scanners left unwrapped. Teaching in kickoff **§1.6** + a Quick-Checklist line.
+  **Structural rot only** — semantic drift (anchor present, meaning refactored away) is named as a
+  human read (route to item **A**), not something the grep can prove. Proven on real fixtures (anchor
+  present → runs; renamed → WARN, no pass; symbol removed → symbol-anchor WARN).
 
 ### I. Baseline for fuzzy output (cousin of A)
 Principle 10's "pin exact output, reproduce exactly" fits a calculator, not fuzzy agent/text
