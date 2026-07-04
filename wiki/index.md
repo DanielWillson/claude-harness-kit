@@ -19,6 +19,9 @@ release before trusting feature claims.
 
 - [[2026-07-audit-pass]] — the Fable-driven audit: kept/cut/reversed/added, with the
   rejected alternatives.
+- [[2026-07-recmint-learnings]] — five edits mined from the recmint-wiki production instance
+  (freshness clock, conflicts register, class-level ratchet, schema-anchoring, fail-loud
+  validator); **applied to the shipped guides 2026-07-03**, with the reasoning record retained.
 - [[claude-md-size]] — the 50-line rule is unsourced; what Anthropic/OpenAI/IFScale
   actually say.
 - [[reasoning-extraction]] — Principle 3 does not conflict with Fable-class refusal

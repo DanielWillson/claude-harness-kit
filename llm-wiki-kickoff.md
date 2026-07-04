@@ -60,6 +60,50 @@ it documents. Then a maintenance pass maps *changed files → pages to revisit*,
 linter flags any page pointing at a file that no longer exists, and a coverage
 check flags any source file no page documents (§4).
 
+**No source file to reconcile against? Anchor to an extracted schema.** §2.1 assumes a
+page's subsystem *is* readable source in the repo. Some aren't — a no-code backend
+(Bubble/Retool), a managed database, a SaaS admin, a dependency you only have as an
+OpenAPI/GraphQL schema — so there's nothing for `reconcile` to diff and the page rots
+invisibly (the §2.1a case in a different disguise). Bring it back under the engine:
+**extract the system's schema — definitions only, never rows (that would dump real/PII
+data) — into a committed file** (e.g. `wiki/_schema/bubble.data-model.json`) and put *that
+file* in the page's `code:`. The existing reconcile diff then fires on it exactly as for
+source — no new drift machinery. When you regenerate the artifact, **overwrite only a marked
+auto-generated block and never the human-authored semantics** (the §2.3 "regenerate the
+mechanical part, preserve the corrections" rule — same discipline as the auto-`index`
+block): a new field appears with a `⚠️ GAP: needs-semantics` marker; a renamed field shows
+up as a remove + an add and is flagged for a human, never silently re-mapped.
+
+### 2.1a When there is no `code:` to reconcile against — the `verified:` clock
+§2.1's engine assumes a page has source files to diff against. The kit's *highest-value*
+pages often don't: a **decision** ("we chose Postgres over Mongo because…"), an
+**incident**'s root-cause narrative, an external/vendor fact — their truth lives in a human
+judgment or an outside source, not in a file `reconcile` can read. A page with empty `code:`
+is invisible to the entire freshness engine (`reconcile`, `stale`, `coverage` all key on
+`code:`), so it ages **silently** — the one outcome §1 calls "worse than no wiki."
+
+The only honest freshness signal such a page has is **when a human last confirmed it still
+holds.** Give it one:
+- Add a **`verified: YYYY-MM-DD`** frontmatter field, distinct from `updated:` (`updated` =
+  last *written*; `verified` = last *confirmed true*). For a code-anchored page a clean
+  `reconcile` pass *is* verification, so the two move together; for a no-`code:` page only a
+  human — or a re-read of the cited source — can move `verified`.
+- Extend **`stale`** to also flag any page whose `code:` is empty and whose `verified:` date
+  is older than a single age threshold (start ~180 days; tighten per-page only for a
+  genuinely volatile fact). This is a **clock**, not a diff: "these un-reconcilable pages
+  haven't been re-confirmed in six months — re-read or re-affirm."
+- **Trust is the pair, never either half.** A `verified` date on a page nobody re-read is a
+  lie; a re-read that doesn't bump the date is invisible. Move `verified` only on a real
+  re-confirmation.
+
+This is the kit eating its own cooking: the kit's *own* wiki already carries a `verified:`
+date on every external-source claim for exactly this reason — this subsection promotes that
+dogfooded discipline into the pattern the kit ships. Keep it **scoped to no-`code:` pages**;
+don't tax every code-anchored page with a second date it doesn't need. (And stop there: a
+page's *epistemic class* — extracted vs inferred vs contested — is the source-trust-tier
+machinery §2.8/§7 decline for the LLM-only default; at most an optional free-text
+`provenance:` note, never a required enum.)
+
 ### 2.2 Three memory layers — and which one owns project knowledge
 Three places a fact can live; the difference is *when it's in context* and *whether
 it travels with the repo*:
@@ -208,6 +252,51 @@ only nudges at *creation* time and **fails once a copy inverts** (lexical distan
 grows), and a noisy version becomes the check everyone ignores. The convention prevents,
 the link-graph detects, the LLM judges.
 
+**At a small navigable corpus, stop there.** *(Optional — large, multi-author corpus
+only.)* The link-graph detector finds drift between pages that *link*; it is blind to two
+pages that state the same fact, never link, and silently diverge. That case barely arises
+while one-claim-one-home holds, and §7's "resist the extra machinery" stands. If a corpus
+grows large and multi-author enough that the convention slips, a periodic **corpus-wide
+scan** is the backstop: a cheap deterministic pass shortlists page *pairs* by shared rare
+terms / shared value tokens (numbers, dates, dollars) / overlapping scope, excluding
+already-linked pairs; then an LLM co-reads each shortlisted pair against its sources and
+files a `tensions.md` row only after an adversarial pass tries to *refute* the contradiction.
+Be honest about what this buys: it is **not** the shingle linter above (that dies the moment
+a copy inverts) — but the shortlist doesn't magically survive inversion either (a number
+corrected $400→$250 leaves no shared value token), so it leans on shared *topic* terms plus
+the LLM stage. It beats the shingle linter by adding **judgment and cost**, not a cleverer
+string match. Sample the *excluded* pairs occasionally to confirm the filter isn't dropping
+real conflicts. Reach for this only once the corpus has outgrown "navigable by eye" — never
+at kickoff.
+
+### 2.10 When the agent can't adjudicate — a conflicts register
+§2.9 settles drift the agent *can* resolve. But some conflicts it has **no basis to rank**:
+two sources of equal standing disagree, or a wiki page contradicts a `CLAUDE.md` invariant
+and which is right is a human call. The failure mode is the agent **quietly picking a
+winner** (the more recent, or the more confident-sounding one) and burying the conflict —
+precisely how a confident-wrong fact enters and then propagates.
+
+Give it a standing home: a **`tensions.md`** register (append-only like `log.md`,
+frontmatter-exempt) — one row per unresolved conflict:
+
+```
+## T-003 — [open] SREC cap: architecture/pricing says $X, runbooks/payout says $Y
+- Both pages cite a source; neither is obviously primary.
+- Surfaced: 2026-07-03 (reconcile linked-neighbour check, §2.9)
+- Needs a human ruling. Until then BOTH pages carry `⚠️ CONFLICT: see T-003`.
+```
+
+The convention in one line: **the agent surfaces; a human disposes.** On a conflict it
+can't settle, the agent files a `T-###` row, drops a `⚠️ CONFLICT: T-###` marker on *both*
+pages (so no reader trusts a contested claim unaware), and **never picks a winner.** A
+human's ruling resolves the row (`[resolved]` + the decision) and becomes the ground truth
+both pages are corrected to. Have `lint` **warn** on any `[open]` row past an age threshold
+(e.g. 30 days) so conflicts can't rot in the register the way they'd rot buried in the
+pages. This is the mirror image of the `GAP`/`UNVERIFIED` markers (§3): those mean "a hole
+we know about"; `CONFLICT` means "two answers we can't yet choose between" — both make an
+unknown *findable* instead of letting the agent paper over it. Cost: one markdown file and a
+marker, against the costliest documented failure in the field (contradictory context).
+
 ---
 
 ## 3. Structure
@@ -218,6 +307,8 @@ wiki/
   index.md       ← catalog/TOC (auto-generated list + a short curated intro)
   log.md         ← append-only operation log; entries headed `## [YYYY-MM-DD] <op> | …`
                    (the `[date] op` header is machine-parseable for the metrics ledger, §4)
+  tensions.md    ← standing register of contradictions the agent can't adjudicate (§2.10);
+                   append-only, frontmatter-exempt. Omit until the first conflict is filed.
   <type>/        ← pages grouped by type
 ```
 
@@ -234,6 +325,7 @@ title: "..."
 type: architecture            # one of your declared types
 status: current               # current | planned | superseded | historical (content state, not review)
 updated: YYYY-MM-DD
+verified: YYYY-MM-DD           # OPTIONAL — for pages with empty code: only; last human confirmation (≠ updated:)
 code: [path/to/source.ext]    # the real files this page documents — the reconcile lynchpin (§2.1)
 related: ["[[other-slug]]"]   # quoted wikilinks; bare [[x]] breaks YAML
 summary: "one-line catalog blurb"
@@ -245,6 +337,9 @@ claims findable:
 - `> ⚠️ GAP: <what's missing>` — a coverage hole.
 - `> ⚠️ UNVERIFIED: <what needs live/on-device confirmation>` — a claim not yet
   checked against reality. The next session that *can* verify works this list.
+- `> ⚠️ CONFLICT: T-### — <the two readings>` — a contested claim the agent could **not**
+  adjudicate; filed in `tensions.md` (§2.10), awaiting a human ruling. Never resolve it
+  silently.
 
 **Wikilinks:** `[[slug]]` = filename without extension; resolves by basename
 anywhere under `wiki/` (folder-independent).
@@ -264,7 +359,8 @@ their place:
 
 - **`lint`** — frontmatter valid; every `[[link]]` resolves; no orphan pages; every
   `code:` path exists. Reports + a non-failing **oversize advisory** (pages over
-  the soft cap). Never rewrites content.
+  the soft cap). Also **warns** on any `tensions.md` row left `[open]` past its age
+  threshold (§2.10). Never rewrites content.
 - **`index`** — regenerate the catalog block of `index.md` from frontmatter.
 - **`reconcile [range] [--diff]`** — pages whose `code:` files changed, both
   **committed** since the last run *and* **uncommitted** (see the boxed note).
@@ -273,7 +369,9 @@ their place:
   linked-but-unflagged neighbours** (§2.9) — the cross-page consistency net — so a
   shared claim's *other* home gets a look even when its own `code:` didn't change.
 - **`stale`** — pages whose `updated` predates the last *commit* touching their
-  `code:`, plus pages with *uncommitted* edits to their `code:`.
+  `code:`, plus pages with *uncommitted* edits to their `code:`. **Also flags any page with
+  an empty `code:` whose `verified:` date exceeds the age threshold** (§2.1a) — the only
+  staleness signal available when there's nothing to diff against.
 - **`coverage`** — source files (in the code dirs) not in any page's `code:` —
   i.e. undocumented subsystems. **Advisory** (many small utils legitimately need no
   page); a list + count, never a failure, or it drowns in noise.
@@ -338,6 +436,16 @@ is unreachable (e.g. after a rebase).
 
 **Wire each new subcommand in all four spots or it drifts:** the dispatch, the
 usage/docstring, the SCHEMA maintenance table, and the command/audit prose.
+
+**Where a rule is both written down and machine-checked, the check is the source of truth
+and the prose is a labelled mirror.** `SCHEMA.md` *describes* the frontmatter enums; the
+linter *enforces* them — so when they disagree the linter wins and `SCHEMA.md` is what gets
+corrected (sync both in the same edit). And make the linter **fail loud**: if it can't
+actually run a check — a missing YAML parser, an unreadable file — it must report that check
+as **`UNCHECKED` (an error), never a silent pass.** A green run that quietly skipped half its
+checks is the same "a control present but inert reads as protection" trap the kit warns about
+for security guards, here aimed at the wiki's own validator: doc-vs-enforcement drift must
+never hide behind a passing check.
 
 ---
 
@@ -582,7 +690,8 @@ because the artifact appears at two stages. Regression-guarded in the audit.
 
 - [ ] Inventoried existing docs / contract file / machine-local memory; identified the missing layer
 - [ ] Chose the safety model (LLM-only vs human-reviewed) and the three memory boundaries; wrote both in SCHEMA.md
-- [ ] Defined page types + lean frontmatter (incl. the `code:` reconcile field) + the GAP/UNVERIFIED markers
+- [ ] Defined page types + lean frontmatter (incl. the `code:` reconcile field) + the GAP/UNVERIFIED/CONFLICT markers
+- [ ] For no-`code:` pages: a `verified:` date + a `stale` age-check (§2.1a); a `tensions.md` register for contradictions the agent can't adjudicate (§2.10)
 - [ ] Scaffolded `wiki/` + `SCHEMA.md` + `index.md` + `log.md` (parseable `## [date] op` headers) + maintenance script
 - [ ] Maintenance script: lint, index, reconcile (committed **+ `git diff HEAD` uncommitted**, `--diff`), stale, coverage, gaps, metrics
 - [ ] Added the read mandate to the contract; kept invariants there, moved depth to the wiki, migrated project knowledge out of machine-local memory
