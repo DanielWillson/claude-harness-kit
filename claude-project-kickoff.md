@@ -21,7 +21,7 @@
 > the specific commands are not. If the project is, say, Go + htmx, or Rust, or a
 > Java service, translate accordingly — do not carry these tools in.
 >
-> **The Kickoff Kit.** This guide is one file in the **Kickoff Kit** — the set you
+> **The Harness Kit.** This guide is one file in the **Harness Kit** — the set you
 > bring to every new project: this **project-kickoff guide** (setup ritual +
 > principles), **`claude-audit-base.sh`** (the code-health audit you seed in §1.6),
 > **`claude-eval-base.sh`** + **`evals-template/`** (the behavioral-eval suite you seed in §1.6b),
@@ -763,7 +763,7 @@ the *same set* you put in `denyWrite` §1.3; they belong in both places).
   page in the same change; at session end run `/wiki` (or the reconcile pass) so pages stay
   reconciled against the code. A stale wiki is worse than none.
 
-## How we build here (the short version — distilled from the Kickoff Kit)
+## How we build here (the short version — distilled from the Harness Kit)
 - **Simple over easy** — un-braid concepts, make each decision in one place, name the trade-offs.
 - **Small, logical commits; branch first, never commit straight to `main`** — push is a separate, explicit gate.
 - **Derive computed values in the API/service layer, not the client** — computed once, consistent everywhere.
@@ -879,7 +879,7 @@ tokens) and **one or two starter primitives** the rest composes (a Button, a Car
 `Stack`), so screens are assembled from a kit, not styled ad hoc. The full rationale and the
 rules that keep it from rotting are **Principle 5**.
 
-**If a per-project styleguide ships in the Kickoff Kit, derive the tokens *from it* first** —
+**If a per-project styleguide ships in the Harness Kit, derive the tokens *from it* first** —
 it's the design source the tokens encode; reading values out of it beats inventing a
 parallel set that later contradicts it.
 
@@ -1036,7 +1036,7 @@ persists in the repo are the kit's **outputs**: `CLAUDE.md`, `.claude/settings.j
 `wiki/`, `README.md`, and the filled-in PRD.
 Those — plus the principles
 internalized as a *lean* digest in `CLAUDE.md`, not the full guide pasted in — carry
-everything forward. The source kit lives **outside** the repo (e.g. `~/dev/claude-kickoff-kit/`)
+everything forward. The source kit lives **outside** the repo (e.g. `~/dev/claude-harness-kit/`)
 and is handed to a project's kickoff — or its one-time adoption
 (`claude-project-adoption.md`) — never to ongoing work. (The audit warns if any kit source
 file gets committed — see its GIT HYGIENE section.)

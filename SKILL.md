@@ -1,7 +1,7 @@
 ---
-name: project-kickoff
+name: harness-kit
 description: >
-  Set up a project the Kickoff Kit way: machine + repo safety floor, tailored settings, a
+  Set up a project the Harness Kit way: machine + repo safety floor, tailored settings, a
   CLAUDE.md contract, a health-check audit, a knowledge wiki, a human README, and the
   building principles. Two flows: KICKOFF for a brand-new project ("run the kickoff",
   "kick off this project", project scaffolding) and ADOPTION for retrofitting the same
@@ -10,9 +10,9 @@ description: >
   already has the harness.
 ---
 
-# Project Kickoff (the Kickoff Kit, as a skill)
+# Harness Kit (as a skill)
 
-This skill packages the **Claude Kickoff Kit** — a portable, stack-agnostic setup ritual
+This skill packages the **Claude Harness Kit** — a portable, stack-agnostic setup ritual
 plus building philosophy. The kit's documents live in this same directory.
 
 **Pick the flow first:**

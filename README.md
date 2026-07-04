@@ -1,6 +1,6 @@
-# Claude Kickoff Kit
+# Claude Harness Kit
 
-The Claude Kickoff Kit is a portable set of documents, handed to a fresh Claude Code session
+The Claude Harness Kit is a portable set of documents, handed to a fresh Claude Code session
 **at the very start of a new project**. It does three jobs at once: it walks Claude through
 setting the project up, it lays out a philosophy for how to build, and it provides templates
 that seed the project's first documentation, health checks, and safety rules.
@@ -238,7 +238,7 @@ Two ways to hand the kit to a fresh session:
 - **Point a session at the files** (works anywhere): give it the kickoff guide and let it
   pull the rest as each step needs them.
 - **Install the kit as a skill** (one time): clone or symlink this repo to
-  `~/.claude/skills/project-kickoff` — the `SKILL.md` at the repo root makes the whole kit
+  `~/.claude/skills/harness-kit` — the `SKILL.md` at the repo root makes the whole kit
   double as a skill package. From then on, saying "kick off a new project" in any session
   triggers the ritual, with the documents loaded on demand instead of pasted up front.
   Nothing else changes: the kit still never enters the project it sets up.

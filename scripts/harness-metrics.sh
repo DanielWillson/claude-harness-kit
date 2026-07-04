@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────────────────────
-# Harness scorecard — BASE TEMPLATE (stack-agnostic). Part of the Kickoff Kit
+# Harness scorecard — BASE TEMPLATE (stack-agnostic). Part of the Harness Kit
 # (see claude-project-kickoff.md §1.6a). Copy to <repo>/scripts/harness-metrics.sh
 # and adapt.
 #

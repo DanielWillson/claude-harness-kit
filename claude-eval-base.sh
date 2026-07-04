@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────────────────────
-# Behavioral-eval runner — BASE TEMPLATE (stack-agnostic). Part of the Kickoff Kit
+# Behavioral-eval runner — BASE TEMPLATE (stack-agnostic). Part of the Harness Kit
 # (see claude-project-kickoff.md §1.6b). Copy to <repo>/scripts/eval.sh and adapt.
 #
 # A behavioral eval is a saved test for the AGENT'S JUDGMENT, not the code: a task prompt +

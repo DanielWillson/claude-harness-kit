@@ -9,7 +9,7 @@ related: ["[[2026-07-audit-pass]]", "[[SCHEMA]]"]
 summary: "What the kit learned from the recmint-wiki production instance: five verified edits (freshness clock, conflicts register, class-level safety net, schema-anchoring, fail-loud validator) — APPLIED to the shipped guides 2026-07-03; this page is the reasoning record"
 ---
 
-# Learnings from recmint-wiki → the Kickoff Kit
+# Learnings from recmint-wiki → the Harness Kit
 
 > **APPLICATION STATUS: APPLIED 2026-07-03.** All five edits are now in the shipped guides
 > (see *Sequencing* for where each landed). This page is retained as the **reasoning record**

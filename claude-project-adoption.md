@@ -1,7 +1,7 @@
 # Claude Code — Existing-Project Adoption Guide
 
 > **Purpose.** Hand this file to a Claude Code session inside an **existing, working
-> project** to retrofit the Kickoff Kit's harness onto it. The kickoff guide
+> project** to retrofit the Harness Kit's harness onto it. The kickoff guide
 > (`claude-project-kickoff.md`) assumes greenfield; this guide re-sequences it for a
 > codebase that already runs, already has habits, and already has history. It **points at**
 > the kickoff guide's sections rather than restating them — keep both files at hand, read

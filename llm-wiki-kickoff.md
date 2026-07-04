@@ -6,7 +6,7 @@
 > the mistakes. Read it end-to-end before proposing a wiki for the project, then
 > adapt (don't copy) the specifics to the project at hand.
 >
-> *Part of the **Kickoff Kit*** — with the project-kickoff guide
+> *Part of the **Harness Kit*** — with the project-kickoff guide
 > (`claude-project-kickoff.md`), the audit base (`claude-audit-base.sh`), and your
 > per-project styleguide + PRD.
 

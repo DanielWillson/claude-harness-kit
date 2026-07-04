@@ -4,7 +4,7 @@ This directory is a **behavioral eval suite**: the agent-behavior analogue of a 
 A normal test checks the *code*; an eval checks the *agent's judgment* — "asked to do X, does
 it do the right thing?" *Eval-driven development is to agents what TDD was to code.*
 
-> **This is a starter scaffold copied from the Kickoff Kit's `evals-template/` — it ships
+> **This is a starter scaffold copied from the Harness Kit's `evals-template/` — it ships
 > mostly empty on purpose.** Two example fixtures show the format; grow the suite to roughly
 > **8–15 representative cases** over time — add one whenever a judgment matters. A throwaway
 > project needs none of this; a project you'll maintain seeds a few now. (See kickoff §1.6b.)

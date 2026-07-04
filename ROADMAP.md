@@ -1,6 +1,6 @@
 # Kit Roadmap — Fable Review (2026-07-03)
 
-**What this is.** A durable capture of a Fable-driven review of the Claude Kickoff Kit —
+**What this is.** A durable capture of a Fable-driven review of the Claude Harness Kit —
 gaps, proposed additions, where harness engineering is going, the skeptic evidence, sources
 to add, and a build order. Provenance: a close read of the whole kit plus a ~30-agent
 research sweep, then a cross-check against a competing AI's independent answer to the same

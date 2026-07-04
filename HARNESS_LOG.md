@@ -1,6 +1,6 @@
 # HARNESS_LOG.md — harness change log  ·  TEMPLATE (this project owns it)
 
-> **This is a starter template the Claude Kickoff Kit seeded into your project, then
+> **This is a starter template the Claude Harness Kit seeded into your project, then
 > stepped away from. It is now yours.** It records changes to *this project's* harness —
 > the directives, verifiers, templates, settings, and rules that shape how the agent works here.
 > It is **not** a log of the kit. Delete this banner and the example entry once your own
@@ -49,7 +49,7 @@ Each entry carries these fields:
 ## Anchor — kit adoption  ·  *(example — replace the placeholders with your real values)*
 
 - **date:** `<YYYY-MM-DD>`
-- **change:** Adopted the Claude Kickoff Kit — seeded the harness (contract, audit, wiki,
+- **change:** Adopted the Claude Harness Kit — seeded the harness (contract, audit, wiki,
   settings floor, this log) at kit version `<kit-version>` (commit `<commit-sha>`).
 - **rationale (the bet):** A durable harness makes the agent's work trustworthy without
   babysitting each step; this entry stamps the version we started from, so a later reader can

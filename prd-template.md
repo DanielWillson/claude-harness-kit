@@ -1,7 +1,7 @@
 # <Project> — PRD / Spec
 
 > **Per-project, interchangeable** (like the styleguide) — fill this in per project; it is
-> not boilerplate to keep verbatim. Part of the **Kickoff Kit** (see
+> not boilerplate to keep verbatim. Part of the **Harness Kit** (see
 > `claude-project-kickoff.md`). Hand it to a fresh session *with* the kickoff guide.
 >
 > **How it feeds the build:** the kickoff's §1.6 audit and `CLAUDE.md` extract this doc's

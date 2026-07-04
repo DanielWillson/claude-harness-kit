@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────────────────────
-# Code-health audit — BASE TEMPLATE (stack-agnostic). Part of the Kickoff Kit
+# Code-health audit — BASE TEMPLATE (stack-agnostic). Part of the Harness Kit
 # (see claude-project-kickoff.md). Copy to <repo>/scripts/audit.sh and adapt.
 #
 # The value of this script is NOT the generic checks below — it's the
@@ -227,7 +227,7 @@ if git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1; then
     tracked_data=$(git -C "$ROOT" ls-files | grep -iE '(^|/)backups?/|\.bak$|\.dump$|\.sqlite[0-9]?$|\.db$|\.db-(wal|shm|journal)$' || true)
     [ -n "$tracked_data" ] && { warn "data-store / backup artifact tracked in git — confirm no secrets + keep bulk data out of the repo"; echo "$tracked_data" | sed 's/^/       /'; } \
                            || pass "no data-store / backup artifacts tracked"
-    # Kickoff Kit scaffolding is ONE-TIME: its OUTPUTS persist (CLAUDE.md, this script, wiki/,
+    # Harness Kit scaffolding is ONE-TIME: its OUTPUTS persist (CLAUDE.md, this script, wiki/,
     # README.md, the PRD, scripts/eval.sh, evals/, scripts/harness-metrics.sh, HARNESS_LOG.md),
     # its SOURCE guides/templates should not —
     # committed, they reload into every future session's context for nothing. WARN if any
@@ -252,8 +252,8 @@ if git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1; then
     #       intentional — don't "fix" it into the alternation.
     #   (The styleguide is excluded — it may legitimately live in the repo as a design ref.)
     tracked_kit=$(git -C "$ROOT" ls-files | grep -iE '(^|/)(claude-project-kickoff|claude-project-adoption|llm-wiki-kickoff|claude-audit-base|claude-eval-base|securing-claude-sessions|prd-template|readme-template)\.(md|sh)$|(^|/)evals-template/' || true)
-    [ -n "$tracked_kit" ] && { warn "Kickoff Kit scaffolding committed — it's one-time; keep sources out of the repo (outputs persist, sources don't)"; echo "$tracked_kit" | sed 's/^/       /'; } \
-                          || pass "no Kickoff Kit scaffolding committed"
+    [ -n "$tracked_kit" ] && { warn "Harness Kit scaffolding committed — it's one-time; keep sources out of the repo (outputs persist, sources don't)"; echo "$tracked_kit" | sed 's/^/       /'; } \
+                          || pass "no Harness Kit scaffolding committed"
     # Secret pre-commit hook actually enabled? (kickoff §1.3b) A tracked hooks/ dir only
     # fires once `core.hooksPath` is set (per-clone, can't travel in the repo) AND the hook
     # is executable ON DISK. Either missing = a silent no-op that LOOKS installed. WARN, not

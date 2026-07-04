@@ -1,6 +1,6 @@
 # Harness log — the kit's own harness change journal
 
-> **Where this lives, and why here.** This is the Claude Kickoff Kit's *own* instance of the
+> **Where this lives, and why here.** This is the Claude Harness Kit's *own* instance of the
 > harness-change-log practice it ships. The kit seeds a **blank `HARNESS_LOG.md` template** at a
 > project's repo **root** (taught in `claude-project-kickoff.md` §1.6a; ROADMAP item X); that
 > root name is reserved for the template, so the kit keeps its *own* filled-in journal here under
@@ -12,7 +12,7 @@
 
 **What this is.** An append-only, chronological record of every change to *this repo's
 harness* — the directives, verifiers, templates, settings, and rules that make up the Claude
-Kickoff Kit. One entry per harness change.
+Harness Kit. One entry per harness change.
 
 **Why it exists (the meta-goal).** So we can tell, *over time*, which harness changes actually
 earned their keep and which were dead weight. A harness change is a **bet**: as Anthropic's
