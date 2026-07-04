@@ -134,6 +134,16 @@ Standard/Hardened; a Lean project cherry-picks and moves on. Building a *content
 project rather than a code one? See the **archetype appendix** for the editorial/factual
 deltas.
 
+**(Scale-gated aside — skip below real PR volume.)** These tiers pick autonomy from intake
+*posture* (real creds, a second committer), not from a track record. A project that
+accumulates a genuine review history — many merged PRs, a real second-committer or CI
+reviewer — can also let autonomy be *earned from data*: log what the reviewer **changed** on
+each merge, typed (real-bug / style-only / lint-false-positive / the-source-was-wrong), and
+where corrections for a given slice (a page type, a change type) stay rare over time, widen
+what auto-approves *there* — keeping high-stakes classes human-reviewed regardless of the
+numbers. Below that volume the per-slice rates are noise; don't build the ledger — the
+posture tiers are the right model.
+
 ### 1.0a Intake — gather these once, up front
 Nine answers shape several setup steps; collecting them in one short exchange beats
 stopping to ask three or four separate times mid-ritual. Two of them (Q8–Q9) are the
@@ -827,6 +837,13 @@ checks. The valuable part grows over time:
   grep that FAILs when violated (the linter can't see these).
 - **Every time you fix a bug, add a regression guard** so the same mistake can't
   silently return. This is the single highest-leverage habit the script enables.
+- **Run the ratchet at the *class* level too, on a cadence.** The per-bug guard fixes one
+  instance. Periodically — every ~5 fixes, or at a regular review pass — step back over the
+  bugs you've fixed and the corrections a reviewer made and ask whether several share a
+  *root class*. If three separate patches all trace to "an agent trusted a doc that had gone
+  stale," the durable fix isn't a fourth patch — it's **one** guard that kills the class (a
+  broader grep, a `CLAUDE.md` clarification, a reconcile rule). Propose it; never auto-apply.
+  Same ratchet, aimed at the *pattern* instead of the *instance*.
 Run `bash scripts/audit.sh` after any significant edit (note: `chmod` is often
 deny-listed under the sandbox — run via `bash`, and write temp logs to `$TMPDIR`,
 not `/tmp`). It complements, doesn't replace, a judgment review of what greps miss.
@@ -909,7 +926,9 @@ as whether it exists.
 work, the why) → the **wiki**. One fact often spawns all three — a fixed bug leaves a
 guardrail line, a regression grep, and an incident page — but only the terse guardrail earns
 a place in always-loaded context. When in doubt about depth (architecture, rationale,
-history), it goes in the wiki, **not** `CLAUDE.md`.
+history), it goes in the wiki, **not** `CLAUDE.md`. And a *contradiction the agent can't
+adjudicate* — two sources of equal standing that disagree — goes to the wiki's conflicts
+register (`llm-wiki-kickoff.md` §2.10), **surfaced, not silently resolved.**
 
 *Field cross-reference (the same split, in the emerging shared vocabulary):* this is what
 OpenAI's Codex team calls treating the contract as a **"table of contents,"** not an
@@ -1367,6 +1386,12 @@ off-brand sentence that ships looking fine. The ritual still applies; these are 
   and state savings/outcomes as a *range*, never a single number. These are *examples* of
   the editorial-invariant rule above, not a separate system — encode each as a guard.
 
-The wiki (`llm-wiki-kickoff.md`) carries over unchanged, except the page types skew to the
-content's own taxonomy; the highest-value pages are still **incidents** (the claim that was
-wrong, and how it was caught) and **decisions** (why the voice/positioning is what it is).
+The wiki (`llm-wiki-kickoff.md`) carries over with **one freshness delta.** A
+content/factual project has little or no `code:` for pages to reconcile against, so the
+code-diff engine that keeps a codebase wiki honest has nothing to point at here — and an
+un-reconcilable page rots *silently*, which for a facts-first deliverable is the whole risk.
+Lean on the **`verified:` clock** instead (wiki guide §2.1a): each factual page carries the
+date a human last confirmed it, and `stale` flags the ones gone quiet. The page types skew
+to the content's own taxonomy; the highest-value pages are still **incidents** (the claim
+that was wrong, and how it was caught) and **decisions** (why the voice/positioning is what
+it is) — which are exactly the no-`code:` pages the clock exists to protect.

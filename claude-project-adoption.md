@@ -55,7 +55,9 @@ questions on what only the owner knows:
 - Anything the evaluation left ambiguous — a convention you *inferred*, a doc-vs-code
   contradiction you can't adjudicate. Ask rather than guess: a wrong line baked into
   `CLAUDE.md` does more damage than a question asked twice, because the agent follows it
-  with confidence.
+  with confidence. (Once the wiki exists, a contradiction that *stays* unadjudicated gets a
+  standing home — the conflicts register, `llm-wiki-kickoff.md` §2.10 — surfaced, not
+  silently resolved, until someone rules on it.)
 
 Ask in **one batch**, not a drip (same rule as the kickoff intake).
 
