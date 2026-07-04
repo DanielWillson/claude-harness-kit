@@ -11,9 +11,11 @@ project is on its feet, the kit's job is done.
 
 ## The big idea: an agent is a model plus a harness
 
-A useful way to think about coding agents has been going around the field lately, and it comes
-from Martin Fowler. The model is Claude itself, and that part is fixed — nobody using the kit is
-changing how Claude thinks. Everything *else* is the harness: the instructions the agent reads, the checks it has
+A useful way to think about coding agents has been going around the field lately; its crispest
+statement is Birgitta Böckeler's *Harness engineering for coding agent users* — published in
+Martin Fowler's *Exploring Generative AI* collection, which is why it's often loosely credited to
+him, though the framing (*Agent = Model + Harness*) is hers. The model is Claude itself, and that
+part is fixed — nobody using the kit is changing how Claude thinks. Everything *else* is the harness: the instructions the agent reads, the checks it has
 to pass, the boundaries it isn't allowed to cross, and the knowledge it can look up. That
 surrounding structure, far more than any single cleverly-worded prompt, is what decides whether
 an agent does good, reliable work.
@@ -63,9 +65,29 @@ by **~75%**.
 The extended version of this argument — every claim sourced and dated — is
 [`LESSONS.md`](LESSONS.md).
 
+### The sharpest witnesses split the question in two
+
+The most credible practitioners don't line up simply "for" or "against" — they split the
+question along two axes that move differently, and Salvatore Sanfilippo (antirez, creator of
+Redis) is the clearest case. On **capability and autonomy** he reversed: in July 2025 he
+insisted *"don't use agents… You must be in control of what the LLM can see"*
+([antirez.com](https://antirez.com/news/154)); by early 2026 he was running Claude Code and
+Codex autonomously on real Redis work ([news/160](https://antirez.com/news/160),
+[news/164](https://antirez.com/news/164)). On **structural coherence** he did not budge — left
+alone, models *"produce fragile code bases that are larger than needed, complex, full of local
+minima choices, suboptimal"* (July 2025), and eleven months later the critique is unchanged: the
+output *"does not reach the structural quality and economy of complexity of the best hand-written
+software"* ([news/168](https://antirez.com/news/168), June 2026). What changed was not the model
+becoming a good architect; it was antirez building the scaffolding — a written spec, invariant
+lists, a progress log, line-by-line review — around a model whose structural judgment he still
+doesn't trust. His one-line summary is the whole thesis of this kit: **"Programming is now
+automatic, vision is not (yet)"** ([news/159](https://antirez.com/news/159)). You don't bet on the
+model; you build the harness — which is the bridge that turned even a skeptic like him into a
+daily agent user.
+
 ## How the pieces fit together
 
-Borrowing Fowler's vocabulary again, the durable harness is built from two kinds of help, both
+Borrowing Böckeler's vocabulary again, the durable harness is built from two kinds of help, both
 aimed at the same goal: making the agent's output trustworthy.
 
 - **Guides** point the agent in the right direction *before* it starts working. These are
@@ -76,7 +98,7 @@ aimed at the same goal: making the agent's output trustworthy.
   reviewing the first one's plan, and the wiki's habit of checking itself against the real code.
   Good sensors catch what the guides missed.
 
-(Fowler calls these "feedforward" and "feedback" controls; "guides" and "sensors" are the same
+(Böckeler calls these "feedforward" and "feedback" controls; "guides" and "sensors" are the same
 idea in plainer words.)
 
 The two halves form a loop, and a person closes it by hand. When a sensor keeps catching the
@@ -221,7 +243,7 @@ plans.
 - **Knowledge that keeps itself honest.** The wiki and the README both check themselves against
   the code, so the documentation can't silently rot. A knowledge base trusted on faith slowly
   fills with confident-sounding lies; one that is checked against the real code goes out of date
-  *visibly*, which is the only kind of out-of-date anyone can actually fix. (Fowler calls the
+  *visibly*, which is the only kind of out-of-date anyone can actually fix. (Böckeler calls the
   general habit "keeping quality left" — catching problems early and cheaply, instead of
   discovering them once the agent has already built on bad information.)
 - **Keep knowledge in the project, not in the agent's private memory.** What the project knows
@@ -280,9 +302,11 @@ lives:
   pass cut its scout-then-fan-out coaching and *reversed* its own stale advice against
   structured agent output.)
 - **Appreciating — worth more as the model improves.** Delegation structure (a stronger
-  orchestrator makes tiering and fan-out more valuable, not less) and the ratchet itself
-  (every mistake becomes a permanent check): a more capable model converts both into more
-  leverage per unit of setup.
+  orchestrator makes tiering and fan-out more valuable, not less), the ratchet itself
+  (every mistake becomes a permanent check), and a suite of **behavioral evals** — saved tests
+  for the agent's *judgment*, run at every model upgrade to prove the change helped rather than
+  quietly regressed. *Eval-driven development is to agents what test-driven development was to
+  code.* A more capable model converts all of these into more leverage per unit of setup.
 
 The habit this section encodes: **a model upgrade is a scheduled maintenance event for the
 harness**, not just a version bump. Re-run the per-line test on `CLAUDE.md` and on the
@@ -293,9 +317,14 @@ kit's own guidance; leave the invariants alone.
 The kit didn't invent this approach. It assembles a set of ideas the field has been working out
 in the open over the past year. Each of these is worth reading directly:
 
-- **Martin Fowler — *Harness engineering for coding agent users.*** The guides-and-sensors
-  framing, the habit of "keeping quality left," and the idea of building up a project's harness
-  over time. [martinfowler.com](https://martinfowler.com/articles/harness-engineering.html)
+- **Birgitta Böckeler — *Harness engineering for coding agent users*** (2 Apr 2026). The
+  *Agent = Model + Harness* decomposition, the guides-and-sensors framing, the habit of "keeping
+  quality left," and the idea of building up a project's harness over time. Published in Martin
+  Fowler's *Exploring Generative AI* collection (he curates and edits; contributors keep their
+  byline — which is why this framing is widely miscredited to Fowler, including by this kit's own
+  earlier drafts). Her follow-up *Maintainability sensors for coding agents* (27 May 2026)
+  extends the sensor idea.
+  [martinfowler.com](https://martinfowler.com/articles/harness-engineering.html)
 - **OpenAI — *Harness engineering: leveraging Codex in an agent-first world.*** "Humans steer,
   agents execute," the instruction file as a "table of contents" rather than an encyclopedia,
   and the project's knowledge base as its "system of record."
@@ -328,6 +357,42 @@ in the open over the past year. Each of these is worth reading directly:
   to a *codebase* specifically: the running code is the source of truth, and every wiki page is
   continuously checked back against it.
   [gist.github.com](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)
+
+### Field evidence the kit leans on (URLs verified 2026-07-03)
+
+Newer sources behind the "start skeptical" case and the shelf-life claims — each link checked
+live on the date above:
+
+- **Verification is the bottleneck.** METR's RCT found experienced open-source developers ~19%
+  *slower* with early-2025 AI while feeling ~20% faster
+  ([metr.org](https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/)); its
+  Feb 2026 follow-up didn't revise that, and noted developers now refuse to work without AI —
+  which contaminated the re-test ([metr.org](https://metr.org/blog/2026-02-24-uplift-update/)).
+  The time-horizon paper tracks how long a task an agent can finish, doubling ~every 7 months
+  ([arXiv 2503.14499](https://arxiv.org/abs/2503.14499)).
+- **AI is an amplifier, not an equalizer.** Anthropic's study of ~400k Claude Code sessions found
+  verified success rising from ~15% (novice) to ~33% (expert)
+  ([anthropic.com](https://www.anthropic.com/research/claude-code-expertise)); DORA's 2025 report
+  reaches the same "multiplier of existing conditions" conclusion
+  ([dora.dev](https://dora.dev/dora-report-2025/)).
+- **Coherence stays human.** Models score ~70% on SWE-bench Verified but far lower on realistic
+  multi-file work — SWE-Bench Pro ([arXiv 2509.16941](https://arxiv.org/abs/2509.16941)),
+  LongCodeBench 29%→3% as context grows ([arXiv 2505.07897](https://arxiv.org/abs/2505.07897)).
+- **Why self-report is worthless.** "Confident and Wrong" found a model submitting a patch on
+  100% of runs but resolving only 44%, with silent failures invisible to completion- and
+  consistency-based monitoring ([arXiv 2603.25764](https://arxiv.org/abs/2603.25764)) — the
+  empirical case for the doer/judge split.
+- **Security doesn't improve on its own.** Veracode found ~45% of AI-generated code carries a
+  vulnerability, flat across model generations (2025 report, with a
+  [Spring 2026 update](https://www.veracode.com/blog/spring-2026-genai-code-security/)).
+- **Evals as the core artifact.** Anthropic, *Demystifying evals for AI agents*
+  ([anthropic.com](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents)).
+- **Weld the agent to the codebase.** Amp (Thorsten Ball, Quinn Slack), *Raising an Agent* ep. 9
+  ([ampcode.com](https://ampcode.com/podcast/episode-9)).
+- **The skeptic-to-user arc.** DHH, *Promoting AI agents*
+  ([world.hey.com](https://world.hey.com/dhh/promoting-ai-agents-3ee04945)); Simon Willison,
+  *Vibe engineering* ([simonwillison.net](https://simonwillison.net/2025/Oct/7/vibe-engineering/),
+  a term he has since shifted to "agentic engineering").
 
 > The style guide and spec are swapped out per project; the guides and templates are the
 > reusable core.
