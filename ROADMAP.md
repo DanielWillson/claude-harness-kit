@@ -41,6 +41,8 @@ ours) vs *Hygiene/Catch-up* (the field already knows this; do it because it's lo
 | **T** | **Tool/connector/integration inventory** | Medium | Hygiene · *new* |
 | **U** | **Incident-response runbook** for agent mistakes (forward, not retrospective) | Medium | Hygiene/Frontier · *new* |
 | **W** | **Harness component registry** (owner/version/last-verified/risk/sunset) | Medium | Hygiene · *new* |
+| **X** | **Harness change log** (`HARNESS_LOG.md`) + vetted **cross-repo learning** | Med–High | Frontier/Unique · *new* |
+| **Y** | **Living adoption** — skill re-reviews repo & proposes upgrades as the kit evolves | Medium | Frontier · *new* |
 | **H** | **"Who audits the audit"** — guards assert their own anchor | Medium | Hygiene |
 | **J** | **Re-verify the harness after a Claude Code upgrade** | Medium | Hygiene |
 | **I** | **Golden-oracle for non-deterministic output** (tolerance/rubric) | Lower | Frontier (cousin of A) |
@@ -94,6 +96,9 @@ A scorecard that proves the ratchet is paying off instead of assuming it. The ki
   harness ran **>20× the cost** of the simple run (verified). Track whether the spend pays.
 - **Shortcut:** the wiki already has a `metrics` subcommand — copy that shape, point it at the
   harness. Kit teaches + ships the script; repo holds the numbers.
+- **Companion — the harness change-log (`HARNESS_LOG.md`, item X):** ship a qualitative log next to
+  the numbers — *what* changed and *why*. B is the gauge; the log is the flight recorder. Seed the
+  basic version with B; the schema + cross-repo layer is item X.
 
 ### C. Agent-run observability → feed the ratchet
 A flight recorder for agent runs, so you can see *why* one went wrong or expensive.
@@ -245,6 +250,32 @@ last-verified date, risk tier, known failure modes, and sunset criteria. Ties di
 shelf-life doctrine (invariant / depreciating / appreciating). Scale honestly: a small project's
 registry is a short table; skip it if the harness is tiny.
 
+### X. Harness change log (`HARNESS_LOG.md`) + cross-repo learning *(new)*
+A journal of harness changes and *why* — and, its bigger purpose, a **portable, machine-legible**
+record so a Claude in one kit-derived repo can learn from another's.
+- **The file:** `HARNESS_LOG.md`, always at the repo **root**; the name is mandated by setup so the
+  skill can always find it (chosen to be clear and collision-free with the names people hand LLMs —
+  `CLAUDE.md`, `AGENTS.md`, `CHANGELOG.md`, etc.). Append-only, one entry per harness change, with a
+  small **schema** (in the spirit of `wiki/SCHEMA.md`): date · change · rationale · what it replaced
+  · risk tier · related ROADMAP item. **The first entry records the adopted kit version/commit** —
+  the anchor item Y needs.
+- **Basic version ships with B** (it's the qualitative half of the metrics — B is the gauge, the log
+  is the flight recorder). The *new* work here is the schema + the cross-repo-learning capability.
+- **Cross-repo learning crosses the trust boundary → the Lesson-5 gate applies.** Another repo's log
+  is a *suggestion*, never auto-applied: Claude reads repo B's log → **proposes** "repo B does X,
+  worth considering here?" → the human decides. Precedent: the kit already keeps this journal for
+  *itself* (`wiki/decisions/`); this generalizes that practice to the projects it creates.
+
+### Y. Living adoption — re-review & propose upgrades as the kit evolves *(new)*
+The adoption skill re-reads the repo (on prompt, optionally periodically) and proposes harness
+updates when the kit itself has improved since the repo adopted it.
+- **The mechanism already exists:** it's the adoption guide's **evaluate → propose** step, re-run
+  against the *delta* between the repo's adopted kit version (from `HARNESS_LOG.md`) and the current
+  kit. Not a new machine — a re-invocation of one the kit has.
+- **Depends on X** (the version stamp): build the log first.
+- **On-prompt before scheduled** (Ronacher: hooks must earn their keep; automation is not free) and
+  **proposes, never auto-applies** — same posture as the adoption flow. Extends **O** and **W**.
+
 ---
 
 ## 4. Where harness engineering is going (+ hardest challenge)
@@ -333,11 +364,13 @@ Lesson-7 failure in the wild.
 1. ✅ **Fowler fix + README citations** (Q, P) — done in README this session (uncommitted);
    propagate Q to the rest of the kit.
 2. **Evals scaffold + harness-metrics script** (A, B) — the two to build first; A now includes the
-   fixture schema + provenance rule.
+   fixture schema + provenance rule, and B seeds the basic `HARNESS_LOG.md` companion.
 3. **Action-risk tiers + name-the-reviewer** (R, V) — the highest-value cross-check newcomers;
    cheap, high-leverage, and both feed the conformance script.
 4. **SCA + audit-guard checks** (G, H) — security + false-security hygiene.
 5. **Conformance script + fan-out adoption driver** (O) — the biggest; makes the rest stick; have
    it check for R and V.
 6. Fold in the rest as the ratchet pulls them in — non-git rollback (S), tool inventory (T),
-   incident runbook (U), harness registry (W), plus C, D, E, I, J, K–N, F.
+   incident runbook (U), harness registry (W), plus C, D, E, I, J, K–N, F. Then the cross-repo
+   layer: **X** (harness-log schema + vetted cross-repo learning), then **Y** (living adoption;
+   needs X's version stamp).
