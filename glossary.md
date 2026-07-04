@@ -120,6 +120,7 @@ Shipped into the kit; each points to where it lives.
 | V | **Name the reviewer** | Every project names *who* reviews the agent's work and *what source of truth* they check against. | kickoff §1.5 (`## Review` block) + Quick Checklist |
 | X | **Harness change log** | An append-only record of what changed in the harness and why — portable enough for cross-repo learning. | [`HARNESS_LOG.md`](HARNESS_LOG.md), [`wiki/harness-log.md`](wiki/harness-log.md) |
 | R | **Action-risk tiers** | Classify the agent's actions by reversibility × reach; wire the dangerous ones to deny/ask, not prose. | kickoff §1.3c + the `<!-- action-risk -->` table in §1.5 + the audit marker check (§1.6) + [`templates/project.settings.json`](templates/project.settings.json) |
+| H | **Safeguard-rot check** | Each safeguard asserts its own anchor so it WARNs (rotted) instead of silently dying green; a self-check audits the audit's own guards. Structural rot only — semantic drift is a human read. | [`claude-audit-base.sh`](claude-audit-base.sh) (`guarded` helper + `SAFEGUARD SELF-CHECK`) + kickoff §1.6 + Quick Checklist |
 
 ## Roadmap items — planned
 
@@ -131,7 +132,6 @@ Names locked; definitions use the vocabulary above. Build state and detail live 
 | O | **Adoption check + fan-out verifier** | A script that checks a repo actually adopted the kit's artifacts, run by focused sub-agents so no one context reads the whole kit. |
 | C | **Flight recorder** | A durable record of what an agent did during a run, so you can inspect *why* it went wrong or got expensive. |
 | G | **Dependency-vulnerability scan** | An audit step that flags libraries with known published security holes, plus stronger secret detection. |
-| H | **Safeguard-rot check** | Makes each safeguard verify its own target still exists, so it fails loud instead of silently dying. |
 | S | **Non-git rollback** | Snapshot-and-recover rituals for state git doesn't cover (databases, hosted configs, deploys, external backends). |
 | E | **Spec-as-source** | Treating the spec as a living, reconciled source of intent — not a fill-in-once doc. |
 | D | **Cross-project memory** | A queryable knowledge layer for when per-project markdown files stop scaling across many projects. |

@@ -57,6 +57,84 @@ risk tier · free-text **origin** — with no ROADMAP/maintainer fields, because
 
 ---
 
+## 2026-07-04 — Safeguard-rot check (safeguards assert their own anchor)
+
+- **Change.** Built the safeguard-rot check (ROADMAP item **H**). Two files. In
+  `claude-audit-base.sh`: a `guarded "<what>" "<anchor-file>" "<symbol|''>" && { <real check> }`
+  helper that confirms a guard's declared **anchor** still resolves *before* the real check runs
+  (anchor present → run it; anchor gone → **WARN loudly and skip the body**), plus a new
+  **`SAFEGUARD SELF-CHECK`** section ("audit the audit") that rolls up every anchored guard
+  exercised this run and names the rotted ones. The rot-prone template guards were converted to the
+  convention — INVARIANTS **#1** (pure-module, file anchor) and **#3** (diagnostic read-back, file +
+  *symbol* anchor `your_log_table`) and the **REGRESSION GUARDS** example (file + symbol anchor tied
+  to the fix). In `claude-project-kickoff.md`: a **§1.6** teaching subsection + one Quick-Checklist
+  line.
+- **Rationale (the bet).** A safeguard is a `grep`, and a grep rots **silently**: an "absent from
+  `file.x`" guard keeps returning green the day someone renames `file.x` or refactors the thing away —
+  it protects nothing but still *reads* as protection. That is **worse than no guard** (false
+  confidence — *a check that no longer runs is just prose*, §1.3a). The bet: a guard that **declares
+  the anchor it depends on** and fails loud when that anchor is gone converts the most dangerous
+  failure mode of the safety net — a dead guard that looks alive — into a visible WARN, at the cost of
+  one wrapper call. The self-check is the same idea pointed at the audit's *own* guards, mirroring the
+  wiki's `stale`/`coverage` (a check that checks itself).
+- **What it replaced.** Net-new; nothing removed. It **hardens the safety net** the kit already
+  teaches (glossary *safeguard* / *the safety net*; §1.6's "add a regression guard for every bug")
+  rather than adding a new artifact — the existing template safeguards were rewritten *through* the
+  helper, not duplicated. Reuses the house `pass`/`warn`/`fail` idiom and the INVARIANTS grep-limits
+  candor (no new vocabulary; the audit is still a **verifier**, each check a **safeguard** — not a
+  "sensor").
+- **Shelf-life/risk class.** **Permanent** — its force is a property of the world, not the model: a
+  grep's literal match silently stops matching under a rename no matter how capable the model gets, so
+  a guard that doesn't assert its own anchor will always be able to die quiet. Zero blast-radius:
+  the shipped template has **no active** `guarded` calls (every converted example stays a commented
+  placeholder), so `GUARDS_TOTAL=0` and the self-check emits a `·` info line — the `WARN`/`FAIL` tally
+  is unchanged *by construction*, not by luck.
+- **Related ROADMAP item.** **H** (safeguard-rot check), build-order step 4 (security + false-security
+  hygiene, beside **G** dependency-vuln scan). Feeds **O**: the self-check is the audit verifying its
+  own guards, the same "verify adoption with a verifier, not a self-report" posture O applies to the
+  whole kit.
+- **Commit.** `7fec8a9` (the two-file feature) + this log entry.
+- **Design choices worth pointing at.**
+  - **Gate-clause form, not an eval wrapper.** `guarded … && { real check }` keeps the guard body
+    **plain shell** (no `'\''`-escaped eval string). On a lost anchor `guarded` returns 1 and the
+    `&& { }` body is skipped — the load-bearing property (**a missing anchor never reaches a `pass`**)
+    falls out of ordinary `&&` short-circuiting under `set -uo pipefail` (no `set -e` to fight).
+  - **Registry, not a text-scan, for the self-check.** The self-check reads counters `guarded`
+    populates as it runs (`GUARDS_TOTAL` / `GUARDS_ROTTED` / a names string), **not** a grep-and-eval
+    over the script's own source. A static parser could mis-parse a multi-line call or fail to expand a
+    `$VAR` and report a **live** guard as rotted — a self-check that cries wolf about the safety net is
+    exactly the false-confidence-in-reverse H exists to kill. The registry tests the *actually
+    resolved* path at runtime, so it cannot false-positive. Plain int/string counters (not a bash
+    array) keep it safe under `set -u` on old bash (3.2). Honest cost: it only covers guards that
+    **ran** this pass — a guard behind a disabled branch isn't rolled up until re-enabled, at which
+    point `guarded` flags it in place (stated in the section comment).
+  - **Structural rot only — the honest half, named not faked.** The check proves each anchor still
+    **exists**; it **cannot** prove the anchor still **means** what the guard assumed (semantic rot:
+    file/symbol present but the surrounding code refactored so the pattern no longer bites). That is a
+    human read — a review / LLM-judge pass — flagged in a comment that mirrors the `~line 122`
+    INVARIANTS grep-limits note. Build the structural half; name the semantic half.
+  - **Conversion scoped on the merits.** Only the rot-prone **named-file** guards were wrapped;
+    whole-dir scanners (INVARIANTS #2/#4/#5 over `$SRC`/`$UI`/`$ROOT/content`) were left unwrapped
+    with an in-file note — a dir-scan anchors to a dir that can't rot the insidious silent way a
+    renamed named-file guard does (and a bad `$SRC` fails everything visibly). So "convert the
+    template safeguards" reads as a judgment call, not three that were missed.
+  - **Proven on real fixtures, not asserted.** A scratch project ran the *verbatim* shipped helper +
+    self-check with one active guard: (a) anchor present → guard passes, self-check green (`1 guard,
+    all anchors resolve`); (b) anchor file renamed → `⚠ lost its anchor … (rotted, NOT passed)`, zero
+    pass lines, self-check names it; (c) file kept but symbol `compare_digest` removed → the finer
+    **symbol** anchor fires (`…:compare_digest`).
+- **Signal to watch.** In real projects: do authors actually **wrap** their absence-in-a-file guards
+  in `guarded`, or keep writing bare greps that rot silently — the exact gap this exists to close? Does
+  the self-check's `·`-when-empty stay quiet enough to not be noise, yet the roll-up WARN get **read**
+  when a guard rots? And the honest boundary in practice: how often does a guard's anchor **survive** a
+  refactor while its *meaning* silently drifts (semantic rot the grep can't catch)? If semantic drift
+  turns out to bite often, the durable fix is to route those guards through the **behavioral-eval /
+  judgment** pass (item A), not to over-claim what an anchor check can prove.
+- **Retrospect.** *(open — revisit at the next maintenance moment, or the first time a real guard's
+  anchor rots in an adopted project.)*
+
+---
+
 ## 2026-07-04 — Dependency-vulnerability scan + entropy secret pass (known-CVE + unlabeled-secret coverage)
 
 - **Change.** Built the dependency-vulnerability scan and a stronger secret scanner (ROADMAP item

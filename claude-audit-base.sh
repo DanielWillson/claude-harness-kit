@@ -39,6 +39,10 @@ OFFLINE_ASSETS=""                # set to 1 for an offline / air-gapped / privac
                                  #   target — enables the "no CDN asset in markup" check
                                  #   (assets must be vendored locally). Leave empty otherwise.
 PASS=0; WARN=0; FAIL=0; overall=0
+# Anchored-safeguard roll-up — populated by guarded() below, reported by the SAFEGUARD SELF-CHECK
+# section ("audit the audit"). Plain counters + a string (not a bash array) so it's safe under
+# `set -u` on old bash (3.2) too. Initialized here, before any guard runs.
+GUARDS_TOTAL=0; GUARDS_ROTTED=0; GUARDS_ROTTED_LIST=""
 
 pass()    { echo "  ✓  $1"; PASS=$((PASS+1)); }
 warn()    { echo "  ⚠  $1"; WARN=$((WARN+1)); overall=1; }
@@ -53,6 +57,51 @@ run_tool() {  # run_tool "<label>" "<shell command>"
     else
         fail "$label"; sed 's/^/       /' "$TMP/audit_tool.txt" | tail -20
     fi
+}
+
+# ── Anchor-checked safeguard (rot-proof guards — kickoff §1.6, ROADMAP item H) ───────────────
+# A safeguard is a grep, and a grep rots SILENTLY. An "absent from file.x" guard keeps returning
+# green after someone renames file.x or refactors the thing away — it protects nothing but still
+# READS as protection. That is worse than no guard: false confidence (a check that no longer runs
+# is just prose — §1.3a). `guarded` fixes it: a guard declares the ANCHOR it depends on and this
+# helper confirms the anchor still RESOLVES before the real check runs. Use it as a GATE clause,
+# so the guard body stays plain shell (no eval-string quoting):
+#
+#   guarded "<what it protects>" "<anchor-file>" "<symbol|''>" && {
+#       <the real check — greps + pass/warn/fail, exactly as before>
+#   }
+#
+#   <anchor-file>  path (relative to $ROOT, or absolute) the guard inspects — the file that, if
+#                  renamed/deleted, would make the guard silently meaningless.
+#   <symbol>       OPTIONAL literal string that must still appear IN that file (a function, a
+#                  table/column name, a marker) — the finer anchor; '' = file-existence only.
+#
+# Anchor present → returns 0, the { real check } runs and pass/warn/fails as designed.
+# Anchor GONE    → WARNs loudly ("lost its anchor — re-point it or retire it") and returns 1, so
+#                  the body is SKIPPED. A missing anchor never reads as pass — that is the point.
+# Either way the call is tallied for the SAFEGUARD SELF-CHECK roll-up below.
+#
+# HONEST LIMIT (mirrors the INVARIANTS grep-limits note): this catches STRUCTURAL rot only — the
+# anchored file/symbol VANISHED. It cannot catch SEMANTIC rot — the anchor still exists but the
+# code it guarded was refactored so the pattern no longer means what it did. That is a human read
+# (a review / LLM-judge pass), not something a grep can prove.
+guarded() {  # "<what>" "<anchor-file>" "<symbol|''>"   (use as: guarded ... && { <real check> })
+    local what="$1" afile="$2" asym="${3:-}" apath
+    case "$afile" in /*) apath="$afile" ;; *) apath="$ROOT/$afile" ;; esac
+    GUARDS_TOTAL=$((GUARDS_TOTAL+1))
+    if [ ! -e "$apath" ]; then
+        warn "safeguard for $what has lost its anchor ($afile) — re-point it or retire it (rotted, NOT passed; kickoff §1.6)"
+        GUARDS_ROTTED=$((GUARDS_ROTTED+1)); GUARDS_ROTTED_LIST="$GUARDS_ROTTED_LIST
+       - $what  (anchor: $afile)"
+        return 1
+    fi
+    if [ -n "$asym" ] && ! grep -qF -- "$asym" "$apath" 2>/dev/null; then
+        warn "safeguard for $what has lost its anchor ($afile:$asym) — re-point it or retire it (rotted, NOT passed; kickoff §1.6)"
+        GUARDS_ROTTED=$((GUARDS_ROTTED+1)); GUARDS_ROTTED_LIST="$GUARDS_ROTTED_LIST
+       - $what  (anchor: $afile:$asym)"
+        return 1
+    fi
+    return 0
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -83,13 +132,31 @@ section "INVARIANTS (from your CLAUDE.md / spec)"
 #   [ -n "$hits" ] && { fail "<invariant> violated"; echo "$hits" | sed 's/^/       /'; } \
 #                   || pass "<invariant> holds"
 #
+# ANCHOR any guard that asserts a bad pattern is ABSENT from a SPECIFIC file (kickoff §1.6). Such a
+# guard rots SILENTLY: rename the file and the grep matches nothing, so it passes GREEN forever
+# while protecting nothing. Wrap it in guarded() (defined at the top of this script) — the guard
+# runs only while its anchor resolves, and WARNs loudly (never passes) once the anchor is gone:
+#   guarded "<invariant> holds" "src/path/to/file.ext" "<optional symbol>" && {
+#       hits=$(grep -rnE '<bad pattern>' "$SRC/path/to/file.ext" 2>/dev/null || true)
+#       [ -n "$hits" ] && { fail "<invariant> violated"; echo "$hits" | sed 's/^/       /'; } \
+#                       || pass "<invariant> holds"
+#   }
+# (A guard that scans a whole dir — $SRC / $UI / $ROOT/content — anchors to a dir that always
+# exists, so it can't rot this way; leave those unwrapped. Anchoring earns its keep for the
+# named-file guards below.)
+#
 # Three starter examples (adapt paths and patterns to your project):
 #
 # 1. Pure-function layer guard — a module declared pure (no I/O, no DB, no network)
 #    must not import from impure layers. Catches mixed-concern creep before it spreads.
-#   impure=$(grep -rnE 'import (db|requests|subprocess|httpx|urllib)' "$SRC/yourapp/pure_module.py" 2>/dev/null || true)
-#   [ -n "$impure" ] && { fail "pure module imports from I/O layer — violates pure-function contract"; echo "$impure" | sed 's/^/       /'; } \
-#                    || pass "pure module has no I/O imports"
+#    ANCHORED: this is the textbook rot case — an "absent from pure_module.py" guard that would
+#    pass green the day the module is renamed. It declares the file as its anchor, so guarded()
+#    WARNs on a lost anchor instead of falsely passing.
+#   guarded "pure module has no I/O imports" "src/yourapp/pure_module.py" "" && {
+#       impure=$(grep -rnE 'import (db|requests|subprocess|httpx|urllib)' "$SRC/yourapp/pure_module.py" 2>/dev/null || true)
+#       [ -n "$impure" ] && { fail "pure module imports from I/O layer — violates pure-function contract"; echo "$impure" | sed 's/^/       /'; } \
+#                        || pass "pure module has no I/O imports"
+#   }
 #
 # 2. Additive-schema guard — schema must never contain destructive changes
 #    (DROP TABLE / DROP COLUMN). For any project that promises backwards-compatible
@@ -100,9 +167,14 @@ section "INVARIANTS (from your CLAUDE.md / spec)"
 #
 # 3. Diagnostic read-back guard — a write-only diagnostic/snapshot table must never
 #    be read by the engine that writes it (prevents a log → score → log feedback loop).
-#   readback=$(grep -rnE 'FROM\s+your_log_table|SELECT.*your_log_table' "$SRC/yourapp/engine.py" 2>/dev/null || true)
-#   [ -n "$readback" ] && { fail "engine reads from its own diagnostic log — feedback loop"; echo "$readback" | sed 's/^/       /'; } \
-#                      || pass "diagnostic log is write-only from the engine"
+#    ANCHORED with a SYMBOL: the guard depends on BOTH engine.py existing AND the table name
+#    your_log_table still being the thing to look for. Rename the table and the "no read-back"
+#    grep silently passes — so the table name is the finer anchor; guarded() WARNs if it's gone.
+#   guarded "diagnostic log is write-only from the engine" "src/yourapp/engine.py" "your_log_table" && {
+#       readback=$(grep -rnE 'FROM\s+your_log_table|SELECT.*your_log_table' "$SRC/yourapp/engine.py" 2>/dev/null || true)
+#       [ -n "$readback" ] && { fail "engine reads from its own diagnostic log — feedback loop"; echo "$readback" | sed 's/^/       /'; } \
+#                          || pass "diagnostic log is write-only from the engine"
+#   }
 #
 # 4. Single-source derived value — a value the API layer computes (kickoff Principle 1)
 #    must not be re-derived in the client, or the two drift. Name the server field,
@@ -508,15 +580,49 @@ paths=$(grep -rnE '/Users/|/home/[a-z]|/volume[0-9]|C:\\\\Users' "$SRC" 2>/dev/n
 # ═══════════════════════════════════════════════════════════════════════════
 section "REGRESSION GUARDS"
 # Add ONE check here every time you fix a bug, so the same mistake cannot return.
-# Name the bug + date; FAIL if the old pattern reappears. Example:
-#   # [regression] token compared with == (not timing-safe), fixed 2026-06-03
-#   grep -rq 'compare_digest\|hash_equals' "$SRC" && pass "[regression] timing-safe compare" \
-#       || fail "[regression] token compare must be timing-safe"
+# Name the bug + date; FAIL if the old pattern reappears. ANCHOR the guard to the file the fix
+# lives in (kickoff §1.6) — a regression guard is exactly an "absent from that file" check, the
+# rot-prone shape: rename the file and it passes green forever, protecting nothing. Example:
+#   # [regression] token compared with == (not constant-time), fixed 2026-06-03; the fix put a
+#   # compare_digest() in auth/tokens.py. Anchor to that file AND that symbol — if either is gone
+#   # the guard is meaningless, so guarded() WARNs (rotted) instead of falsely passing green.
+#   guarded "[regression] token compare is constant-time" "src/auth/tokens.py" "compare_digest" && {
+#       unsafe=$(grep -rnE 'token[A-Za-z_]*\s*==|==\s*[A-Za-z_]*token' "$SRC/auth/tokens.py" 2>/dev/null | grep -vE 'compare_digest|# ok' || true)
+#       [ -n "$unsafe" ] && { fail "[regression] token compared with == — must be constant-time (compare_digest)"; echo "$unsafe" | sed 's/^/       /'; } \
+#                        || pass "[regression] token compare is constant-time"
+#   }
 # The one-line annotation above is all this script carries. The incident itself —
 # symptom, root cause, the attempts that did NOT work, the fix — is a wiki incident
 # page (llm-wiki-kickoff.md §2.4); that's where the highest-value anti-knowledge lives.
 # ═══════════════════════════════════════════════════════════════════════════
 pass "(no regression guards yet — add one each time you fix a bug)"
+
+# ═══════════════════════════════════════════════════════════════════════════
+section "SAFEGUARD SELF-CHECK (audit the audit — kickoff §1.6)"
+# The audit's own safeguards are greps, and a grep rots SILENTLY. guarded() (top of this script)
+# fixes each anchored guard per-check — a lost anchor WARNs instead of passing. THIS section is
+# the roll-up: it verifies the audit's own guards haven't gone dead, mirroring the wiki's
+# stale/coverage self-checks (llm-wiki-kickoff.md §4) pointed at this script instead of the wiki's
+# pages. It reports on the anchored safeguards guarded() actually EXERCISED this run: it can emit
+# the positive "N guards, all anchors resolve" that a per-guard warning can't, and it names the
+# rotted ones together. WARN, tier-aware: a script with no anchored guards yet stays quiet (a `·`
+# line), exactly like the evals/README presence checks.
+#
+# HONEST LIMIT (mirrors the INVARIANTS grep-limits note): STRUCTURAL rot only — it proves each
+# anchor still EXISTS. It cannot prove the anchor still MEANS what the guard assumed (SEMANTIC rot:
+# the file/symbol is still there but the code around it was refactored so the pattern no longer
+# bites). That is a human read — a review / LLM-judge pass — not something a grep can settle. And a
+# guard behind a disabled branch simply didn't run, so it isn't rolled up here until it's
+# re-enabled (at which point guarded() flags it immediately, in place).
+# ═══════════════════════════════════════════════════════════════════════════
+if [ "$GUARDS_TOTAL" -eq 0 ]; then
+    echo "  ·  no anchored safeguards exercised — wrap absence-in-a-file guards in 'guarded \"…\" \"<anchor>\" \"…\" && { … }' so a renamed anchor WARNs instead of passing green (kickoff §1.6)"
+elif [ "$GUARDS_ROTTED" -gt 0 ]; then
+    warn "audit-the-audit: $GUARDS_ROTTED of $GUARDS_TOTAL anchored safeguard(s) lost their anchor (see the ⚠ above) — re-point or retire; structural rot only, semantic drift is a human read:"
+    echo "$GUARDS_ROTTED_LIST"
+else
+    pass "audit-the-audit: $GUARDS_TOTAL anchored safeguard(s), all anchors resolve (structural check only — semantic drift still needs a human read)"
+fi
 
 # ═══════════════════════════════════════════════════════════════════════════
 section "DOCUMENTATION"
