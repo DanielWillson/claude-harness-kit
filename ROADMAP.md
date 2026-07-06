@@ -455,6 +455,11 @@ rubber-stamped it — the Lesson-7 failure in the wild.
 **Before adding new surface, close the 2026-07-06 defect sweep (§9)** — the bugs found are in
 **A**/**B**/**O**/**R**'s own shipped scripts, and they undermine the exact "don't trust a
 self-report, prove it bites" promise those items make to every project that adopts them.
+**Settings-validity cluster (§9.1 O#3 + #5) — ✅ closed 2026-07-06:** strict-JSON loadability gates in
+**both** verifiers, comment-free settings templates, and a comment-free command-pattern action-risk join
+(details in §9.1 and `wiki/harness-log.md`). **Still open:** the eval-runner crash + rubric-verdict flip
+(**A**), the metrics inflation (**B**), the `AGENTS.md` fallback (**O #4**), the §9.2 security-template
+gaps, and the §9.3 process gaps.
 
 1. ✅ **Fowler fix + README citations** (Q, P) — done in README (2026-07-03); Q propagated across
    the rest of the kit (2026-07-06).
@@ -526,6 +531,11 @@ exact script as the machine check of that promise. **Fix:** add a JSON-validity 
 grep (prefer `jq` if present, else `python3 -c json.load`, else a loud `SKIPPED` naming that
 validity couldn't be confirmed — no hard dependency needed, and this preserves item **O**'s own
 `SKIPPED ≠ PASS` principle).
+**✅ Fixed 2026-07-06.** `kit-conformance.sh` now runs a **strict** `python3 -c json.load` (the audit
+does the same) before the grep — settings that Claude Code would silently drop → **FAIL**, not a false
+PASS; absent python3 → loud SKIP. (Note: `jq` is *not* usable here — like `json.load` it's strict, which
+is correct, since CC is strict too; see #5.) Proven on the fixture matrix (a comment-bearing or
+brace-unbalanced settings → FAIL/exit 1; a valid one → PASS).
 
 **O — `scripts/kit-conformance.sh` hardcodes `CLAUDE.md`, with no `AGENTS.md` fallback.**
 Line 64 (`CLAUDE_MD="$TARGET/CLAUDE.md"`) contradicts the kit's own stated policy that "Claude
@@ -553,6 +563,23 @@ prescribed to every other project. **Fix:** verify against the currently-install
 actual settings parser before shipping the inline-comment form further; if unsupported, move the
 tag to a sibling non-JSON manifest or a comment-only banner line, and update the template + the
 kickoff §1.3c fenced example together.
+
+**✅ Verified + fixed 2026-07-06 — and it was bigger than this entry knew.** Tested directly against the
+installed **Claude Code 2.1.201** via its own `--debug` settings-load log (a controlled, file-based
+`projectSettings 0 vs 1 rule(s)` comparison): settings are **strict JSON, no JSONC**, and **ANY `//`
+comment silently drops the ENTIRE file** — not just the inline-array form this entry flagged, but the
+**leading banner too** (the form this entry called a "sidestep"). The kit's own `.claude/settings.json`,
+`templates/project.settings.json`, and `templates/managed-settings.template.json` were therefore **all
+silently non-functional** (masked only where the managed floor independently covered the same denies).
+The drop is **silent** in `-p`/SDK/CI mode (CLI help: "settings files that fail validation are silently
+ignored"). **Fix (A–D):** all three shipped settings files stripped to comment-free strict JSON (their
+teaching relocated to `templates/README.md`); the action-risk marker redesigned to a **command-pattern
+join** (the CLAUDE.md table's `<!-- action-risk -->` marker stays — markdown — and names each gate's
+*exact settings rule*; the audit/conformance join by that rule string, no settings-side comment); and a
+**strict-JSON gate added to BOTH `scripts/audit.sh` and `scripts/kit-conformance.sh`** so a `//` re-added
+out of habit **FAILs loudly** instead of silently voiding the floor. All proven via CC's own loader
+(comment-free files now load their rules) + the fixture matrix. Version-scoped: JSONC is #17968 (open) —
+if it ships, revisit (item **Y**).
 
 **B — `scripts/harness-metrics.sh`'s audit-check count is measurably inflated.**
 Line 91's grep pattern `` (pass|warn|fail)[[:space:]]+" `` matches the shape of a call anywhere in
