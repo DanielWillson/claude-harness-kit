@@ -57,6 +57,88 @@ risk tier · free-text **origin** — with no ROADMAP/maintainer fields, because
 
 ---
 
+## 2026-07-06 — Adoption check + fan-out verifier (verify the whole kit's adoption, not a self-report)
+
+- **Change.** Built item **O** — the adoption verifier. New `scripts/kit-conformance.sh`: a
+  deterministic roster check over the artifacts kickoff/adoption should have produced (`CLAUDE.md`
+  + its routing/reviewer blocks, the per-repo secret-read floor, a `bash -n`-valid
+  `scripts/audit.sh`, behavioral evals, ≥3 wiki incident pages, the action-risk gates), rolled into
+  an adoption scorecard. Plus teaching in `claude-project-kickoff.md` **§1.6c** (which also carries
+  the Part 2 **fan-out playbook**), a **Definition-of-Done upgrade** in `claude-project-adoption.md`
+  (the DoD list is now machine-checked by the script), one Quick-Checklist line, and the
+  outputs-list / glossary / ROADMAP bookkeeping. In the same session, propagated the **Q** citation
+  fix (Fowler→Böckeler) across the rest of the kit.
+- **Rationale (the bet).** The kit is now big enough that one session reading all of it blows its
+  context and marks things "done" it never did — a self-report you cannot trust. O is §1.4's "prove
+  it bites, don't trust a self-report," turned on the *whole kit's adoption*, decomposed by fan-out
+  so no single context has to hold the kit. The load-bearing bet is the **exit model**: *FAIL only
+  what no correct adoption could omit; WARN what a lean-but-correct project may legitimately skip;
+  exit nonzero only on FAIL.* Copying the audit's `warn(){ …; overall=1; }` idiom would have made a
+  correct **code-only throwaway** *fail* on artifacts it is right to omit — the exact way a check
+  gets tuned out. Proven: a floor-only fixture (CLAUDE.md + deny floor + valid audit, nothing else)
+  exits **0**.
+- **What it replaced.** Net-new; nothing removed. It sits beside the §1.6 verifier family (audit
+  §1.6, scorecard §1.6a, evals §1.6b) at a **different altitude**: the audit checks *code health*
+  after every edit; O checks *the harness is installed* once/periodically, and treats `audit.sh` as
+  one roster item (present + `bash -n`, never executed). Where they overlap it **reuses the audit's
+  exact predicates** (the `action-risk` marker-join, the `*.eval.md` count, the `## Review` /
+  `## Knowledge & memory` anchors) rather than inventing new ones — one vocabulary, two questions.
+- **Shelf-life/risk class.** **Appreciating** — an adoption verifier is worth *more* as the kit and
+  the fleet of kit-derived repos grow: it is what makes item **Y**'s living-adoption re-review
+  possible, and the thing that scales the kit past what one context can hold. Zero blast-radius: a
+  read-only report + docs + placeholders; it executes nothing but `bash -n` on an existing file,
+  writes nothing, and exits nonzero only on a missing floor artifact.
+- **Related ROADMAP item.** **O** (the big one), build-order **step 5** — "makes the rest stick."
+  It checks for **R** (the action-risk marker), **V** (`## Review`), **A** (evals), and the floor;
+  and it is the anchor **Y** (kit-update proposals) re-runs against the delta to a newer kit.
+- **Commit.** `ba61ed6` (the feature + Q propagation) + this log entry.
+- **Design choices worth pointing at.**
+  - **The exit model is the whole game** (see the bet) — a *third* model, unlike either cousin (the
+    audit gates on WARN|FAIL; harness-metrics always exits 0): nonzero only on FAIL. Proven across a
+    fixture matrix — floor-only → 0 FAIL / exit 0; each floor break (no `CLAUDE.md`; **no**
+    `.claude/settings.json`; an absent or `bash -n`-broken audit) → FAIL / exit 1; each optional
+    degrade (no reviewer; a settings floor with no active read-deny; <3 wiki pages; over budget;
+    tagged-table-no-gate) → WARN / exit 0; and the **no-arg production seam** (script placed in a
+    seeded project's `scripts/`, run with no argument so `TARGET` takes the `$ROOT` default) →
+    CONFORMANT. Every case pasted, not asserted.
+  - **Deny-floor severity is concordant with the audit — a caught inconsistency.** First draft FAILed
+    "settings present but no secret-read deny"; the **audit's** SECURITY section only **WARNs** on the
+    same input (its "#1 gap" nudge). Two kit verifiers disagreeing on one input reads as a bug, and the
+    managed floor's `Read(**/.env)` glob **can** cover a repo's secrets — so a floored machine may
+    *correctly* omit the repo-level read-deny, which O's own "FAIL only what no correct adoption could
+    omit" test says must be WARN. Split on the merits: a **missing** `.claude/settings.json` (the home
+    of the push-gate + Stop hook too) → FAIL; **present-but-no-read-deny** → WARN, matching the audit.
+  - **`audit.sh` is a roster entry, not a dependency.** Present + `bash -n`-valid → PASS; never run.
+    Running it would check code *health* at the wrong cadence, couple the two scripts, and defeat the
+    fan-out. This altitude line is what keeps O from collapsing into a second audit.
+  - **Reused predicates, not reinvented anchors.** The action-risk check is the audit's **verbatim**
+    marker-join (keys on the `action-risk` tag on an *active*, non-`//` settings line, so the floor's
+    own untagged `ask(git push)` cannot false-green it — proven in the matrix). Likewise the evals
+    count and the `## Review` / `## Knowledge & memory` greps.
+  - **Managed floor: loud SKIP, never green.** A root-owned OS file outside the repo isn't portably
+    readable, so O SKIPs it with "confirm via `/status` + `claude doctor`" — `SKIPPED ≠ PASS` (item
+    G). A trivial best-effort macOS-path peek, but it SKIPs either way.
+  - **Part 2 is prose, not machinery.** You cannot spawn sub-agents from bash, so the fan-out is a
+    documented playbook (§1.6c, cross-referencing Part 3.1/3.13 + the "don't trust a self-report" rule),
+    not a driver binary. An optional `--area` seam was left **unbuilt** (builder's-judgment, like R's
+    settings example) — the roster is small enough that a whole-run is cheap.
+  - **Scope held to §O's roster.** The B/X artifacts (harness-metrics / `HARNESS_LOG.md`) were *not*
+    added as checks — they aren't in §O's enumeration, and "lean tier gets just the conformance
+    script" argues against creep.
+  - **Structural only — named, not faked.** A header comment states plainly it proves *presence*, not
+    *correctness* (a routing block that actually routes; evals that test something real) — that read
+    is the fan-out's / a human's job, mirroring the audit's grep-limits candor and item H's line.
+- **Signal to watch.** Do adopting projects actually **run** it (and read the WARNs), or does it join
+  the tuned-out pile? Does the exit model hold — do real lean projects come out zero-FAIL? (The
+  likeliest false-positive — a floored machine with only `denyWrite` set locally — was **pre-empted**
+  by splitting the deny-floor check to WARN, concordant with the audit; see the design note. Watch
+  whether any *other* FAIL-class row proves over-strict in the field.) Does the fan-out playbook get
+  used on big adoptions, or does everyone just run the script?
+- **Retrospect.** *(open — revisit when the first real project runs the check, or when item Y is built
+  on top of it.)*
+
+---
+
 ## 2026-07-04 — Safeguard-rot check (safeguards assert their own anchor)
 
 - **Change.** Built the safeguard-rot check (ROADMAP item **H**). Two files. In

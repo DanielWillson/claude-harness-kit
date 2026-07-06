@@ -28,7 +28,7 @@ ours) vs *Hygiene/Catch-up* (the field already knows this; do it because it's lo
 
 | # | Recommendation | Impact | Type |
 |---|---|---|---|
-| **O** | Self-verifying **adoption check + fan-out verifier** | **Highest** | Frontier/Unique |
+| **O** | Self-verifying **adoption check + fan-out verifier** | **Highest** | Frontier/Unique · ✅ **Built (2026-07-06)** |
 | **A** | **Behavioral evals** as a first-class `evals/` artifact (incl. non-code workflows) | **Highest** | Frontier/Unique |
 | **B** | **Harness scorecard** (generalize the wiki `metrics` shape) | **High** | Frontier/Unique |
 | **R** | **Action-risk tiers** — gate agent actions by reversibility × reach | **High** | Frontier/Unique · *new* |
@@ -49,7 +49,7 @@ ours) vs *Hygiene/Catch-up* (the field already knows this; do it because it's lo
 | **K–N** | **4 internal-consistency fixes** | Lower | Hygiene |
 | **F** | **Untrusted-content rule** (name the untrusted-content surface) | Lower | Hygiene |
 | **P** | **README additions** — eval-driven line, Axis 1/2 quotes, citation block | ✅ **Done (2026-07-03)** | Documentation |
-| **Q** | **Fowler → Böckeler citation fix** | ✅ **Done in README; propagate to rest of kit** | Hygiene |
+| **Q** | **Fowler → Böckeler citation fix** | ✅ **Done (README 2026-07-03; rest of kit 2026-07-06)** | Hygiene |
 
 **If you do only three: O, A, B.** Add **G** if security is near-term. The two highest-value
 *newcomers* from the cross-check are **R** (action-risk tiers) and **V** (name the reviewer) —
@@ -190,6 +190,26 @@ whole kit.
   itself, and it kills the context-window worry. (This session used exactly this pattern to verify
   README citations — parallel read-only verifiers + a single writer — a working proof of concept.)
 - Scale honestly: Lean tier gets just the conformance script; fan-out for bigger adoptions.
+- **Built 2026-07-06:** `scripts/kit-conformance.sh` — a deterministic roster check (CLAUDE.md +
+  routing/reviewer blocks · per-repo secret-read floor · a `bash -n`-valid `audit.sh` · evals ≥N ·
+  ≥3 wiki incident pages · action-risk gates) with a **three-class exit model** — *FAIL only what no
+  correct adoption could omit; WARN what a lean project may legitimately skip; exit nonzero only on
+  FAIL* — so a code-only throwaway passes zero-FAIL (proven on a fixture matrix: floor-only → exit 0;
+  each floor break → exit 1; each optional degrade → WARN/exit 0). It treats `audit.sh` as one roster
+  item (present + syntax-valid, **never executed** — that is the audit's cadence) and **reuses the
+  audit's own predicates** where they overlap (the `action-risk` marker-join, the `*.eval.md` count,
+  the `## Review` / `## Knowledge & memory` anchors) — one vocabulary, two questions. The managed
+  floor is a **loud SKIP** (a root-owned OS file, not repo-readable — `SKIPPED ≠ PASS`, per **G**).
+  Part 2 is a **documented fan-out playbook** (kickoff **§1.6c**, cross-referencing Part 3.13 + the
+  "don't trust a self-report" rule), not machinery — you cannot spawn sub-agents from bash; an
+  optional `--area` seam was left unbuilt on the merits. Teaching in **§1.6c** + a Quick-Checklist
+  line + a **Definition-of-Done upgrade** in `claude-project-adoption.md` (its DoD roster is now
+  machine-checked by the script). Scope held to this section's enumeration (B/X artifacts were
+  *not* added as checks). The deny-floor check is kept **concordant with the audit** (which WARNs,
+  not FAILs, on the same input): a *missing* `.claude/settings.json` is FAIL, but *present-but-no-
+  read-deny* is WARN — the managed floor's `Read(**/.env)` can cover a repo's secrets, so a floored
+  machine may correctly omit the repo-level read-deny (FAILing it would break O's own "FAIL only what
+  no correct adoption could omit" rule).
 
 ---
 
@@ -359,32 +379,35 @@ DHH "Promoting AI agents"; SWE-Bench Pro 2509.16941; LongCodeBench 2505.07897; C
 
 ---
 
-## 7. Fowler → Böckeler citation fix — ✅ done in README; propagate to the rest of the kit
+## 7. Fowler → Böckeler citation fix — ✅ done in README; ✅ propagated across the kit (2026-07-06)
 
 Verified directly: martinfowler.com/articles/harness-engineering.html (2 Apr 2026) is authored by
 **Birgitta Böckeler**, and *Agent = Model + Harness*, guides-and-sensors, feedforward/feedback, and
 "keeping quality left" are all **her** framing, published in Fowler's *Exploring Generative AI*
 collection (he curates/edits; contributors keep their byline — which is why it's widely miscredited
 to him). Fixed across the README this session (opening, "how the pieces fit," "the thinking behind
-it," bibliography). **Still to do:** sweep the rest of the kit for the same misattribution —
-`LESSONS.md`, `claude-project-kickoff.md`, and `wiki/sources/operator-field-reports.md` all
-reference Fowler and should be checked. Poetic footnote: the competing AI in the cross-check made
-the identical error, and one of this session's own verifier agents nearly rubber-stamped it — the
-Lesson-7 failure in the wild.
+it," bibliography). **Propagated 2026-07-06:** swept the rest of the kit and corrected the same
+misattribution in `LESSONS.md`, `claude-project-kickoff.md`, `wiki/sources/operator-field-reports.md`,
+and one file §7 had not listed — `wiki/sources/anthropic-engineering.md` (guides-and-sensors,
+harnessability, "keep quality left," and the "hardest control to automate" sensor claim — all hers).
+Each Fowler ref was checked against the concept, not blanket-replaced; the only `Fowler` mentions left
+kit-wide are the README's *deliberate* explanation of the miscredit. Poetic footnote: the competing AI
+in the cross-check made the identical error, and one of this session's own verifier agents nearly
+rubber-stamped it — the Lesson-7 failure in the wild.
 
 ---
 
 ## 8. Suggested build order
 
-1. ✅ **Fowler fix + README citations** (Q, P) — done in README this session (uncommitted);
-   propagate Q to the rest of the kit.
+1. ✅ **Fowler fix + README citations** (Q, P) — done in README (2026-07-03); Q propagated across
+   the rest of the kit (2026-07-06).
 2. **Evals scaffold + harness-metrics script** (A, B) — the two to build first; A now includes the
    fixture schema + provenance rule, and B seeds the basic `HARNESS_LOG.md` companion.
 3. **Action-risk tiers + name-the-reviewer** (R, V) — the highest-value cross-check newcomers;
    cheap, high-leverage, and both feed the conformance script.
 4. **Dependency-vulnerability scan + safeguard-rot check** (G, H) — security + false-security hygiene.
-5. **Adoption check + fan-out driver** (O) — the biggest; makes the rest stick; have
-   it check for R and V.
+5. ✅ **Adoption check + fan-out driver** (O) — done 2026-07-06; the biggest; makes the rest
+   stick. Checks for R and V (and A + the floor); `scripts/kit-conformance.sh` + kickoff §1.6c.
 6. Fold in the rest as the safety net pulls them in — non-git rollback (S), tool inventory (T),
    incident runbook (U), harness manifest (W), plus C, D, E, I, J, K–N, F. Then the cross-repo
    layer: **X** (harness-log schema + vetted cross-repo learning), then **Y** (kit-update proposals;
