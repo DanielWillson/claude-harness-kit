@@ -120,7 +120,9 @@ Shipped into the kit; each points to where it lives.
 | V | **Name the reviewer** | Every project names *who* reviews the agent's work and *what source of truth* they check against. | kickoff §1.5 (`## Review` block) + Quick Checklist |
 | X | **Harness change log** | An append-only record of what changed in the harness and why — portable enough for cross-repo learning. | [`HARNESS_LOG.md`](HARNESS_LOG.md), [`wiki/harness-log.md`](wiki/harness-log.md) |
 | R | **Action-risk tiers** | Classify the agent's actions by reversibility × reach; wire the dangerous ones to deny/ask, not prose. | kickoff §1.3c + the `<!-- action-risk -->` table in §1.5 + the audit marker check (§1.6) + [`templates/project.settings.json`](templates/project.settings.json) |
+| G | **Dependency-vulnerability scan** | An audit step that detects each ecosystem from its lockfile and shells out to that ecosystem's own scanner (npm/pip/cargo/…) to flag dependencies with published CVEs, plus an entropy pass that catches unlabeled secrets the `key=` grep misses. | [`claude-audit-base.sh`](claude-audit-base.sh) (`DEPENDENCY VULNERABILITIES` + entropy pass in `SECURITY`) + kickoff §1.6 + Quick Checklist |
 | H | **Safeguard-rot check** | Each safeguard asserts its own anchor so it WARNs (rotted) instead of silently dying green; a self-check audits the audit's own guards. Structural rot only — semantic drift is a human read. | [`claude-audit-base.sh`](claude-audit-base.sh) (`guarded` helper + `SAFEGUARD SELF-CHECK`) + kickoff §1.6 + Quick Checklist |
+| O | **Adoption check + fan-out verifier** | A roster check that a repo *actually* adopted the kit's artifacts (CLAUDE.md + routing/reviewer blocks, the secret-read floor, a valid audit, evals, ≥3 wiki pages, action-risk gates), rolled into an adoption scorecard; FAILs only the irreducible floor, WARNs what a lean project may skip, and fans out one sub-agent per area so no single context reads the whole kit. | [`scripts/kit-conformance.sh`](scripts/kit-conformance.sh) + kickoff §1.6c (teaching + fan-out playbook) + [`claude-project-adoption.md`](claude-project-adoption.md) DoD + Quick Checklist |
 
 ## Roadmap items — planned
 
@@ -129,9 +131,7 @@ Names locked; definitions use the vocabulary above. Build state and detail live 
 
 | Item | Name | One-line definition |
 |---|---|---|
-| O | **Adoption check + fan-out verifier** | A script that checks a repo actually adopted the kit's artifacts, run by focused sub-agents so no one context reads the whole kit. |
 | C | **Flight recorder** | A durable record of what an agent did during a run, so you can inspect *why* it went wrong or got expensive. |
-| G | **Dependency-vulnerability scan** | An audit step that flags libraries with known published security holes, plus stronger secret detection. |
 | S | **Non-git rollback** | Snapshot-and-recover rituals for state git doesn't cover (databases, hosted configs, deploys, external backends). |
 | E | **Spec-as-source** | Treating the spec as a living, reconciled source of intent — not a fill-in-once doc. |
 | D | **Cross-project memory** | A queryable knowledge layer for when per-project markdown files stop scaling across many projects. |
