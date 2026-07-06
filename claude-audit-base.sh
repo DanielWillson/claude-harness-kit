@@ -265,32 +265,53 @@ fi
 section "ACTION-RISK GATES (deterministic enforcement — kickoff §1.3c)"
 # An action-risk table in CLAUDE.md (§1.5) classifies what the agent can do by reversibility × reach
 # and maps the dangerous classes to ask/deny gates. But that table is PROSE, and prose is not a
-# boundary (§1.3a): a row marked ask/deny gates nothing until a real rule exists in
-# .claude/settings.json. This proves the WIRING — if CLAUDE.md carries the shared action-risk marker
-# AND a table row names an ask/deny gate, then .claude/settings.json must carry an ACTIVE rule bearing
-# the paired action-risk tag. WARN, not FAIL — tier-aware like the evals/README presence checks: a
-# project with no outward actions simply omits the table and this stays silent.
+# boundary (§1.3a): a row marked ask/deny gates nothing until a real rule exists in .claude/settings.json.
 #
-# NOTE (mirrors the INVARIANTS grep-limits note above): this keys on the MARKER, not on semantic
-# action->rule correctness — it catches the gross "tagged table, zero tagged gates" case; verifying that
-# each row is wired to the RIGHT rule is a read / judgment pass, not a parser. Two design points let the
-# marker do a join a bare ask/deny grep cannot:
-#   * it keys on the action-risk tag, NOT on ask/deny presence — so the FLOOR's own untagged
-#     ask(git push) / deny(secret reads) never satisfy it (those rules carry no tag); and
-#   * it counts the tag only on an ACTIVE (non-'//'-comment) settings line — so the template's OWN
-#     commented action-risk examples, and any commented-out rule, can't create a false green.
+# FIRST — settings.json must be STRICT JSON or Claude Code SILENTLY DROPS the whole file: every deny/ask
+# rule stops applying, with NO error (verified CC 2.1.201, 2026-07-06; defect §9.1; JSONC is #17968, open).
+# A `//` comment is the usual cause. FAIL loudly so a comment added out of habit can't silently void the
+# floor. python3 is the strict-JSON proxy CC matches (rejects comments, trailing commas, bad syntax);
+# absent python3 → skip the check (never a false pass).
+#
+# THEN the COMMAND-PATTERN JOIN: the action-risk table (under `<!-- action-risk -->`, markdown — comments
+# are fine there) names each gate's EXACT rule in its last column; we confirm each is a real, comment-free
+# ask/deny entry in settings.json — proving the SPECIFIC dangerous command is gated. (The old design tagged
+# the settings rule with an inline `// action-risk` comment — which silently voided the file, §9.1.) WARN,
+# not FAIL — tier-aware: a project with no outward actions omits the table and this stays silent. NOTE
+# (grep-limits, ~line 122): this proves the named rule EXISTS in settings, not that it is semantically the
+# right gate for the class — that is a read/judgment pass.
 # ═══════════════════════════════════════════════════════════════════════════
 ar_claude="$ROOT/CLAUDE.md"
 ar_settings="$ROOT/.claude/settings.json"
-if [ -f "$ar_claude" ] && grep -qiE 'action-risk' "$ar_claude" 2>/dev/null \
-   && grep -qiE '\|[^|]*\b(ask|deny)\b' "$ar_claude" 2>/dev/null; then
-    # CLAUDE.md declares an action-risk table naming ask/deny gates → settings must carry a tagged rule.
-    ar_tagged=""
-    [ -f "$ar_settings" ] && ar_tagged=$(grep -iE 'action-risk' "$ar_settings" 2>/dev/null | grep -vE '^[[:space:]]*//' || true)
-    if [ -n "$ar_tagged" ]; then
-        pass "action-risk gates wired — CLAUDE.md table names ask/deny and .claude/settings.json carries a tagged rule (§1.3c)"
+if [ -f "$ar_settings" ] && command -v python3 >/dev/null 2>&1; then
+    if python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$ar_settings" 2>/dev/null; then
+        pass ".claude/settings.json is strict-JSON loadable — Claude Code will apply its rules (§9.1)"
     else
-        warn "action-risk table in CLAUDE.md names ask/deny gates but NO .claude/settings.json rule bears the paired 'action-risk' marker — high-risk action classes described but not gated; prose is not a boundary (kickoff §1.3c)"
+        fail ".claude/settings.json is NOT strict JSON — Claude Code SILENTLY DROPS the whole file, so every deny/ask rule takes no effect (a // comment? verified CC 2.1.201; §9.1) — remove comments / fix the JSON"
+    fi
+fi
+if [ -f "$ar_claude" ] && grep -q '<!-- action-risk -->' "$ar_claude" 2>/dev/null; then
+    # Table block = marker line → next `## ` heading; extract backticked `Tool(...)` rules from it.
+    ar_rules=$(awk '/<!-- action-risk -->/{f=1} f&&/^## /&&!/action-risk/{exit} f{print}' "$ar_claude" \
+               | grep -oE '`[A-Za-z]+\([^`]*\)`' | tr -d '`' | sort -u)
+    if [ -z "$ar_rules" ]; then
+        echo "  ·  action-risk table present but names no concrete Tool(...) rule to gate — fill the last column (§1.3c)"
+    else
+        ar_set_norm=""
+        [ -f "$ar_settings" ] && ar_set_norm=$(grep -vE '^[[:space:]]*//' "$ar_settings" 2>/dev/null | tr -d '[:space:]' || true)
+        ar_missing=""
+        while IFS= read -r rule; do
+            [ -z "$rule" ] && continue
+            rn=$(printf '%s' "$rule" | tr -d '[:space:]')
+            printf '%s' "$ar_set_norm" | grep -qF -- "$rn" || ar_missing="$ar_missing ${rule}"
+        done <<EOF
+$ar_rules
+EOF
+        if [ -z "$ar_missing" ]; then
+            pass "action-risk gates wired — every rule named in the CLAUDE.md table is a real ask/deny in .claude/settings.json (§1.3c)"
+        else
+            warn "action-risk table names rule(s) NOT wired into .claude/settings.json:${ar_missing} — described but not gated; prose is not a boundary (kickoff §1.3c)"
+        fi
     fi
 else
     echo "  ·  no action-risk table in CLAUDE.md (fine if the project acts only on its own code — §1.3c)"

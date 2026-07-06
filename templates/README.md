@@ -5,6 +5,20 @@ Within `permissions`: **deny > ask > allow**. Array settings (`deny`/`ask`/`allo
 `excludedCommands`) **MERGE across scopes** — so a managed `deny` is authoritative *and* a repo can still add
 its own `allow`/hosts. You get un-editable denies **without** the heavy enterprise `allowManaged*Only` locks.
 
+## ⚠ These files are STRICT JSON — no comments
+
+Claude Code parses `settings.json` (project, user, **and** managed) as **strict JSON — not JSONC.** A single
+`//` or `/* */` comment makes Claude Code **silently drop the ENTIRE file**: every `deny`/`ask`/hook rule stops
+applying, with **no error** — so a well-meaning banner comment silently voids your whole floor. *(Verified
+against Claude Code **2.1.201**, 2026-07-06, via its own settings-load debug log — a comment-bearing file
+loaded `0 rule(s)`; JSONC support is [anthropics/claude-code#17968](https://github.com/anthropics/claude-code/issues/17968),
+still open. If it ever ships this reverses — and re-checking it is exactly item **Y**'s job.)*
+
+**So these templates ship comment-free, and all their teaching lives in this README.** When you adapt one,
+keep it valid JSON — put notes here or in `CLAUDE.md`, never in the JSON. Both `scripts/audit.sh` and
+`scripts/kit-conformance.sh` **FAIL** a settings file that isn't strict-JSON-loadable, so a stray comment
+surfaces loudly instead of silently voiding your gates.
+
 **A control is only as strong as the agent's inability to reach it.** Weakest → strongest:
 `CLAUDE.md` / `autoMode` prose (advisory) → committed project settings (agent-editable) →
 `settings.local.json` (per-machine) → user settings → **managed (root-owned, un-editable)** →
@@ -42,6 +56,26 @@ own `allow`s and hosts*. That is the whole point — hardness without enterprise
 5. **Verify it bites** (post-restart): read `~/.ssh/id_rsa` → blocked; `cat .env` → blocked;
    `git push --force` on a throwaway branch → **prompts**; attempt bypass mode → **rejected** (and `/status`
    shows the source as `managed`).
+
+## Wiring an action-risk gate (comment-free)
+
+If the project can act *beyond editing its own code* (publish, send a message, delete non-git state, spend),
+gate that command deterministically (kickoff §1.3c). The kit used to tag the settings rule with an inline
+`// action-risk` comment — that silently voided the whole file, so it's gone. The comment-free join:
+
+1. In `CLAUDE.md`'s `## Action-risk gates` table (under the `<!-- action-risk -->` marker — markdown, so
+   comments are fine there), name the **exact settings rule** in the last column, e.g. `` `Bash(blog-publish *)` ``.
+2. Add that **same rule, verbatim and comment-free**, to `permissions.ask` (or `deny`) in `.claude/settings.json`.
+
+`scripts/audit.sh` (and `scripts/kit-conformance.sh`) join the two **by the rule string** and WARN if the table
+names a rule that isn't wired — proving the *specific* dangerous command is gated, not just described.
+
+## Adapting `project.settings.json`
+
+Comment-free, so adapt by structure: `allow` is THIS project's routine daily commands (intake Q4 — swap in your
+stack's build/test/lint); `ask` gates what leaves the machine (push/merge) plus any action-risk rule; `deny` is
+this project's secret reads + native writes to its own guards — add the load-bearing paths that must never be
+rewritten. Keep **zero** project-specific names in the **managed** template; those live per-repo, here.
 
 See **`../CHEATSHEET.md`** for the verified mechanics behind all of this.
 

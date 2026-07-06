@@ -1,7 +1,3 @@
-// The kit dogfooding its own PER-REPO floor (kickoff §1.3). The machine-wide HARD floor — no-bypass,
-// credential denies, the OS sandbox — lives in MANAGED settings (templates/managed-settings.template.json
-// + kickoff Part 0). This soft per-repo layer: allow local git, gate only what leaves the machine
-// (push / merge), deny credential reads. Permissions hot-reload — no restart needed.
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {

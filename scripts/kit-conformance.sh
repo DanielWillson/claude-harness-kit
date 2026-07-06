@@ -58,6 +58,27 @@ fail()    { printf "  ✗  %s\n" "$1"; FAIL=$((FAIL+1)); }
 skip()    { printf "  ·  %s\n" "$1"; }                 # loud SKIP / neutral info — touches NO counter
 section() { echo; echo "── $1 ──────────────────────────────────"; }
 
+# Would Claude Code actually LOAD this settings file (defect §9.1)? Returns:
+#   0 = loads (strict JSON)   1 = present but Claude Code would silently drop it   2 = can't tell (no python3)
+# STRICT JSON on purpose. Verified against Claude Code 2.1.201 (2026-07-06): settings.json is parsed
+# as STRICT JSON — NOT JSONC — and ANY `//` comment (a leading banner OR an inline tag) makes CC
+# **silently discard the ENTIRE file**: zero rules load, no error (confirmed via `--debug` load logs:
+# `projectSettings ... 0 rule(s)`). So a comment in settings.json silently voids your deny gates. A
+# strict `json.load` is the right proxy for "CC will load this": it rejects exactly what CC rejects
+# (comments, unbalanced braces, trailing commas). (If JSONC ever ships — anthropics/claude-code #17968,
+# open as of 2026-07 — this reverses; that re-check is item Y's job.) No hard dep: absent python3 →
+# loud "unverified".
+settings_loadable() {
+    command -v python3 >/dev/null 2>&1 || return 2
+    python3 - "$1" <<'PY' 2>/dev/null
+import json, sys
+try:
+    json.load(open(sys.argv[1]))
+except Exception:
+    sys.exit(1)
+PY
+}
+
 echo "Kit conformance — adoption verifier (item O)"
 echo "Target: $TARGET"
 
@@ -103,19 +124,37 @@ fi
 
 # ═══════════════════════════════════════════════════════════════════════════
 section "ACTION-RISK GATES (item R — reversibility × reach, deterministically gated)"
-# REUSED VERBATIM from the audit's ACTION-RISK GATES predicate (claude-audit-base.sh): keys on
-# the shared `action-risk` marker (NOT bare ask/deny, so the floor's own untagged ask(git push)
-# can't satisfy it) and counts the tag only on an ACTIVE (non-'//') settings line. WARN, not FAIL:
-# a project acting only on its own code is correct to omit the table (tier-aware).
+# COMMAND-PATTERN JOIN (mirrors the audit's ACTION-RISK GATES predicate). The old design tagged the
+# settings rule with an inline `// action-risk` comment — but settings.json is STRICT JSON, so that
+# comment silently voided the whole file (defect §9.1). New join: the CLAUDE.md action-risk table
+# (under the `<!-- action-risk -->` marker — markdown, comments fine) names each gate's EXACT rule in
+# its last column; we confirm each of those rules is a real, comment-free ask/deny entry in
+# settings.json. This proves the SPECIFIC dangerous command is gated (stronger than "some tagged rule
+# exists"). WARN, not FAIL — a project acting only on its own code omits the table (tier-aware).
 # ═══════════════════════════════════════════════════════════════════════════
-if [ "$have_claude" -eq 1 ] && grep -qiE 'action-risk' "$CLAUDE_MD" 2>/dev/null \
-   && grep -qiE '\|[^|]*\b(ask|deny)\b' "$CLAUDE_MD" 2>/dev/null; then
-    ar_tagged=""
-    [ -f "$SETTINGS" ] && ar_tagged=$(grep -iE 'action-risk' "$SETTINGS" 2>/dev/null | grep -vE '^[[:space:]]*//' || true)
-    if [ -n "$ar_tagged" ]; then
-        pass "action-risk gates wired — CLAUDE.md table names ask/deny and .claude/settings.json carries a tagged rule (§1.3c)"
+if [ "$have_claude" -eq 1 ] && grep -q '<!-- action-risk -->' "$CLAUDE_MD" 2>/dev/null; then
+    # Table block = marker line → next `## ` heading; extract backticked `Tool(...)` rules from it.
+    ar_rules=$(awk '/<!-- action-risk -->/{f=1} f&&/^## /&&!/action-risk/{exit} f{print}' "$CLAUDE_MD" \
+               | grep -oE '`[A-Za-z]+\([^`]*\)`' | tr -d '`' | sort -u)
+    if [ -z "$ar_rules" ]; then
+        skip "action-risk table present but names no concrete Tool(...) rule to gate — fill the last column with the exact settings rule (§1.3c)"
     else
-        warn "action-risk table in CLAUDE.md names ask/deny but NO active .claude/settings.json rule bears the paired 'action-risk' marker — prose is not a boundary (kickoff §1.3c)"
+        # Normalize settings once: active (non-//) lines, all whitespace stripped, so 'Bash(x *)' == 'Bash(x*)'.
+        set_norm=""
+        [ -f "$SETTINGS" ] && set_norm=$(grep -vE '^[[:space:]]*//' "$SETTINGS" 2>/dev/null | tr -d '[:space:]' || true)
+        ar_missing=""
+        while IFS= read -r rule; do
+            [ -z "$rule" ] && continue
+            rn=$(printf '%s' "$rule" | tr -d '[:space:]')
+            printf '%s' "$set_norm" | grep -qF -- "$rn" || ar_missing="$ar_missing ${rule}"
+        done <<EOF
+$ar_rules
+EOF
+        if [ -z "$ar_missing" ]; then
+            pass "action-risk gates wired — every rule named in the CLAUDE.md table is a real ask/deny in .claude/settings.json (§1.3c)"
+        else
+            warn "action-risk table names rule(s) NOT wired into .claude/settings.json:${ar_missing} — prose is not a boundary; add each as a plain comment-free ask/deny entry (§1.3c)"
+        fi
     fi
 else
     skip "no action-risk table in CLAUDE.md — fine if the project acts only on its own code (§1.3c)"
@@ -128,6 +167,10 @@ section "PER-REPO FLOOR (.claude/settings.json — the unconditional secret-read
 # deliberately CONCORDANT with the audit's SECURITY section so the two verifiers never disagree on the
 # same input:
 #   * file ABSENT              → FAIL — no correct adoption omits the floor file itself.
+#   * present but UNLOADABLE    → FAIL — Claude Code parses settings as STRICT JSON and silently drops
+#                                 the WHOLE file on any `//` comment or syntax error (verified 2.1.201),
+#                                 so a grep still "sees" deny rules that never load. Validated before
+#                                 the grep, the same way audit.sh is `bash -n`-checked.
 #   * present, no read-deny     → WARN — matches the audit's "#1 gap" nudge; a write-deny alone doesn't
 #                                 stop read+exfiltrate, BUT the managed floor's Read(**/.env) glob can
 #                                 cover this repo's secrets, so a floored machine may correctly omit the
@@ -135,12 +178,18 @@ section "PER-REPO FLOOR (.claude/settings.json — the unconditional secret-read
 #                                 correct adoption could omit" test applied honestly).
 # ═══════════════════════════════════════════════════════════════════════════
 if [ -f "$SETTINGS" ]; then
-    deny_reads=$(grep -E '"Read\(' "$SETTINGS" 2>/dev/null | grep -vE '^[[:space:]]*//' \
-                 | grep -iE '\.env|secret|\.pem|credential|\.key|\.token' || true)
-    if [ -n "$deny_reads" ]; then
-        pass "per-repo deny floor present — active secret-READ deny in .claude/settings.json (kickoff §1.3a)"
+    settings_loadable "$SETTINGS"; sload=$?
+    if [ "$sload" -eq 1 ]; then
+        fail ".claude/settings.json is present but Claude Code would SILENTLY DROP it — not strict JSON (a // comment or a syntax error), so ALL its deny/ask/hook rules take no effect and a text grep of it means nothing (verified CC 2.1.201; defect §9.1; kickoff §1.3)"
     else
-        warn "settings present but NO active secret-READ deny — guarding writes but not reads is the #1 gap (kickoff §1.3a); OK only if the managed floor's Read(**/.env) covers this repo's secrets — confirm via '/status'"
+        [ "$sload" -eq 2 ] && skip "couldn't confirm .claude/settings.json parses (python3 not found) — its validity is UNVERIFIED and the floor check below is best-effort (SKIPPED ≠ PASS)"
+        deny_reads=$(grep -E '"Read\(' "$SETTINGS" 2>/dev/null | grep -vE '^[[:space:]]*//' \
+                     | grep -iE '\.env|secret|\.pem|credential|\.key|\.token' || true)
+        if [ -n "$deny_reads" ]; then
+            pass "per-repo deny floor present — active secret-READ deny in .claude/settings.json (kickoff §1.3a)"
+        else
+            warn "settings present but NO active secret-READ deny — guarding writes but not reads is the #1 gap (kickoff §1.3a); OK only if the managed floor's Read(**/.env) covers this repo's secrets — confirm via '/status'"
+        fi
     fi
 else
     fail "no .claude/settings.json at target — the per-repo floor (secret-read denies, push gate, Stop hook) is unadopted (kickoff §1.3)"
