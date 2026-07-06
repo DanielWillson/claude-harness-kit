@@ -675,8 +675,12 @@ gates nothing until each of its `ask`/`deny` rows exists as a real rule at **Lev
 (`.claude/settings.json`) or the **managed floor (Level D)** — the levels from
 [`securing-claude-sessions.md`](securing-claude-sessions.md). Routing a high-blast-radius action to
 Level-A prose leaves it **ungated**; route it to Level B ask/deny (or the managed floor) or it is not
-gated at all. (This is why the §1.5 table and its settings rules share one greppable marker — the
-`action-risk` tag — so the audit (§1.6) can *prove* the wiring exists instead of trusting it.)
+gated at all. (This is why the §1.5 table names each gate's **exact settings rule** in its last
+column: the audit (§1.6) joins the table to `.claude/settings.json` **by that rule string** and
+proves the *specific* command is wired. ⚠ `.claude/settings.json` is **strict JSON — no comments**: a
+single `//` makes Claude Code *silently drop the whole file*, voiding every rule with no error
+(verified CC 2.1.201; §9.1). So the human-readable tag lives in the CLAUDE.md table, **never** in the
+JSON — see [`templates/README.md`](templates/README.md).)
 
 **Agnostic examples.** An agent that can **publish to a personal blog** — irreversible + outward →
 `high` → `ask` (or `deny`, if it must never publish unattended). A script that can **delete files
@@ -689,10 +693,12 @@ that **writes to a shared datastore** other systems read — irreversible + outw
 action is `low`/auto and the per-repo floor already covers it, so skip the table entirely. The moment
 the project can **reach outside itself**, it needs both halves: the table in `CLAUDE.md` (§1.5) *and*
 the gates wired in `.claude/settings.json`. The audit (§1.6) checks the second half is actually
-present — a described `ask`/`deny` row with no tagged rule is exactly the failure it catches.
+present — a table row naming a rule that isn't wired (comment-free) into `.claude/settings.json` is exactly the failure it catches.
 
 ### 1.4 Verify before relying on it
-- Validate the settings JSON: it must parse and the hook command must be present.
+- Validate the settings JSON: it must be **strict JSON** — **no `//` comments** (Claude Code silently
+  drops a comment-bearing file *whole*, voiding every rule with no error — verified CC 2.1.201, §9.1;
+  `scripts/audit.sh` FAILs a non-loadable file) — and the hook command must be present.
 - Pipe-test the auto-commit hook in a throwaway repo (`/tmp`) before trusting it —
   confirm it commits when dirty, is a clean no-op when the tree is clean, and (now that it
   surfaces failures) reports a *blocked* commit instead of falsely succeeding.
@@ -794,12 +800,16 @@ Guard it in the audit. Omit if the target has normal internet.>
 - <run>: `...`
 
 ## Action-risk gates (if applicable) <!-- action-risk -->
-<!-- action-risk MARKER — keep this tag. This table is a MAP, not a control: it is Level-A prose
-     (kickoff §1.3c) and prose is not a boundary. Every `ask`/`deny` row below MUST also exist as a
-     permissions.ask / permissions.deny rule in .claude/settings.json (see templates/project.settings.json),
-     each rule carrying this same `action-risk` tag INLINE on the rule line, so scripts/audit.sh (§1.6)
-     can join this table to those rules and prove the gate exists. A dangerous action gated only by this
-     table is NOT gated.
+<!-- action-risk MARKER — keep this tag (it lives in CLAUDE.md, which is markdown; comments are fine here).
+     This table is a MAP, not a control: it is Level-A prose (kickoff §1.3c) and prose is not a boundary.
+     Every `ask`/`deny` row's EXACT rule (last column) MUST also exist as a permissions.ask / permissions.deny
+     entry in .claude/settings.json (see templates/project.settings.json). scripts/audit.sh (§1.6) joins this
+     table to those rules BY THE RULE STRING — the last column must match the settings entry verbatim — and
+     proves the gate exists. A dangerous action gated only by this table is NOT gated.
+     ⚠ .claude/settings.json is STRICT JSON — NO comments. A single `//` makes Claude Code SILENTLY DROP the
+     ENTIRE file: every deny/ask rule stops applying, with no error (verified CC 2.1.201, 2026-07-06;
+     JSONC support is anthropics/claude-code #17968, still open). So DO NOT tag the settings rule — wire it as
+     a plain comment-free array entry, and keep the human-readable tag/notes HERE, in this table.
      `dry-run` and `batch-cap` are NOT settings keys — they are patterns in the action's OWN tooling
      (a `--dry-run` flag; a "max N per run" cap the script enforces); what gets wired into settings is
      still the `ask`/`deny` on the invocation.
@@ -807,12 +817,12 @@ Guard it in the audit. Omit if the target has normal internet.>
      local + reversible → auto; the per-repo floor already covers it). Add it the moment the agent can
      reach OUTSIDE the project. Rows below are AGNOSTIC PLACEHOLDERS — replace with this project's real actions. -->
 
-| Action class | Gate (auto / ask / deny / dry-run / batch-cap) | Risk tier | Where enforced |
+| Action class | Gate (auto / ask / deny / dry-run / batch-cap) | Risk tier | Exact `.claude/settings.json` rule (wire in, comment-free) |
 |---|---|---|---|
-| `<edit files under git>` | auto | low | classifier — no rule needed |
-| `<delete non-git state / large local rewrite>` | ask (+ `--dry-run` in the tool) | medium | `.claude/settings.json` `ask`, tagged `action-risk` |
-| `<publish · send a message · spend via a paid API>` | ask (+ batch cap in the script) | high | `.claude/settings.json` `ask`, tagged `action-risk` |
-| `<the action that must never run unattended>` | deny | high | `.claude/settings.json` `deny`, tagged + managed floor |
+| `<edit files under git>` | auto | low | — (classifier; no rule needed) |
+| `<delete non-git state / large local rewrite>` | ask (+ `--dry-run` in the tool) | medium | `Bash(<your-destructive-cmd> *)` |
+| `<publish · send a message · spend via a paid API>` | ask (+ batch cap in the script) | high | `Bash(<your-publish-or-spend-cmd> *)` |
+| `<the action that must never run unattended>` | deny | high | `Bash(<your-irreversible-cmd> *)` (+ managed floor) |
 
 ## Review
 - **Reviewer + source of truth.** Default (solo): `reviewer = me; I verify against scripts/audit.sh + the spec, in small batches`. Swap in <who reviews the agent's work> and the <source(s) of truth they verify against — audit / spec / wiki, never "looks right">.
@@ -1606,7 +1616,7 @@ don't have.
 - [ ] **per-repo floor applied to EVERY tier (incl. Lean):** project secret-*read* denies (`.env*`, `secrets/**`) + native `Write`/`Edit` denies on the same paths + enforcement-file denies (`.claude/settings.json`, `hooks/**`) — on top of the Part 0 machine floor (which carries the `~/.ssh`/`~/.aws`/`~/.npmrc` denies + the OS sandbox) (§1.3, §1.3a)
 - [ ] `git push` / `gh pr merge` in the **`ask`** tier (prompts even in auto mode), not hard-denied — push is a one-confirmation gate (§1.3a, Principle 4)
 - [ ] `CLAUDE.md` left **ungated** (never in `ask`/`deny`) — the write-back loop edits it nearly every session
-- [ ] (if the project acts beyond its own code) **action-risk table** in `CLAUDE.md` + each `ask`/`deny` class **wired into `.claude/settings.json`** and tagged with the shared `action-risk` marker — deterministic gates, not prose; the audit checks the wiring (§1.3c, §1.6)
+- [ ] (if the project acts beyond its own code) **action-risk table** in `CLAUDE.md` naming each gate's **exact settings rule** in its last column + that same rule **wired comment-free into `.claude/settings.json`** — deterministic gates, not prose; the audit joins table↔rule by the rule string (§1.3c, §1.6)
 - [ ] `defaultMode: "auto"` set in **USER `~/.claude/settings.json`** (ignored from project/local) — assume auto mode is the posture
 - [ ] forced up-front intake answered, safe-default: real secret/token present (Q9)? · shared repo / 2nd committer (Q6)? · max-lockdown / shared machine? (skip = the locked-down choice)
 - [ ] (if shared repo — Q6) **server-side** branch protection on `main` (block force-push + deletion, require the CI check) + CODEOWNERS on `.claude/**`/`hooks/**`/`.github/**`/`CLAUDE.md` (note: CODEOWNERS doesn't guard direct pushes) + least-privilege/SHA-pinned CI (§1.3b)
@@ -1614,7 +1624,7 @@ don't have.
 - [ ] (if MCP used) `enabledMcpjsonServers` allowlist — MCP + web tools are unsandboxed (§1.3a)
 - [ ] (if a worktree under `allowUnsandboxedCommands:false`) kept **in-repo + gitignored**, not a sibling path that hard-fails (Part 3.11)
 - [ ] `chmod` deny relaxed if deploy target requires it
-- [ ] settings JSON validated; auto-commit hook pipe-tested (surfaces a *blocked* commit, not a false success); (if a blocking hook §1.3b) proved it FIRES via a real blocked commit
+- [ ] settings JSON validated — **strict JSON, no `//` comments** (a comment makes Claude Code silently drop the whole file, §9.1; `scripts/audit.sh` FAILs a non-loadable one); auto-commit hook pipe-tested (surfaces a *blocked* commit, not a false success); (if a blocking hook §1.3b) proved it FIRES via a real blocked commit
 - [ ] settings committed with a detailed message
 - [ ] `CLAUDE.md` created: stack, deploy target + quirks, sensitive paths, daily commands
 - [ ] `scripts/audit.sh` seeded from `claude-audit-base.sh`; TOOLING section wired; git-hygiene secret gate active

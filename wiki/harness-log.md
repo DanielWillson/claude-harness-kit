@@ -57,6 +57,62 @@ risk tier · free-text **origin** — with no ROADMAP/maintainer fields, because
 
 ---
 
+## 2026-07-06 — Settings are strict JSON: comment-free templates + command-pattern action-risk join (defect §9.1)
+
+- **Change.** Fixed a kit-wide, *silent* security defect (ROADMAP §9.1 #5, expanded far beyond how the
+  review scoped it). Verified against **Claude Code 2.1.201** via its own `--debug` settings-load log:
+  settings.json is **strict JSON**, and ANY `//` comment — leading banner OR inline — makes CC **silently
+  drop the whole file** (0 rules load, no error). All three shipped settings files carried comments → were
+  silently non-functional. Fix (A–D): **(A)** `kit-conformance.sh`'s loadability check → **strict** JSON
+  (it had been JSONC-tolerant, built hours earlier on a false premise); **(B)** stripped comments from
+  `templates/project.settings.json`, `templates/managed-settings.template.json`, and the kit's own
+  `.claude/settings.json`, relocating their teaching to `templates/README.md`; **(C)** kit-wide "strict
+  JSON, no comments" teaching (kickoff §1.3c/§1.4/§1.5/checklist, templates/README, glossary R, ROADMAP §9),
+  version-scoped to CC 2.1.201; **(D)** redesigned R's action-risk marker from an inline `// action-risk`
+  settings comment (which voided the file) to a **command-pattern join** — the CLAUDE.md table names each
+  gate's *exact rule*; audit + conformance join by that rule string. Plus a **strict-JSON gate in the AUDIT**
+  (recurrence prevention).
+- **Rationale (the bet).** The kit's cardinal promise is "prove it bites, don't trust a self-report" — yet
+  every shipped settings file was silently doing nothing, and O *certified* the broken form as PASS. The
+  bet: match the real consumer (CC = strict JSON), ship comment-free files, and make BOTH verifiers **FAIL**
+  a comment-bearing file so a floor-voiding mistake is *loud*, not silent. The command-pattern join is
+  comment-free **and** stronger — it proves the *specific* dangerous command is gated, not just that "some
+  tagged rule exists."
+- **What it replaced.** The inline `// action-risk` marker mechanism (item R) and the JSONC-tolerant O#3
+  check (built earlier the same day). Nothing else removed; the action-risk table + `<!-- action-risk -->`
+  marker stay in CLAUDE.md (markdown — comments are fine there).
+- **Shelf-life/risk class.** **Depreciating** on the CC-parser fact (re-audit at a CC upgrade; if JSONC
+  ships — #17968, open — this reverses, and re-checking it is item **Y**'s job) but **permanent** on the
+  principle (match the real consumer's parser; a silent security void must be made loud). Highest
+  blast-radius change in this session — it rewrites the security-critical settings files — so every one was
+  re-verified **through CC's own loader** (comment-free files now load 13 / 7 deny rules where they loaded 0
+  before) plus the fixture matrix.
+- **Related ROADMAP item.** §9.1 defect sweep (O#3 + #5), touching **R**, **O**, and the settings templates.
+  A fix to shipped work, not a new lettered item.
+- **Commit.** `df608ba` (the fix: comment-free templates + strict-JSON gates + command-pattern join) + this log entry.
+- **Design choices worth pointing at.**
+  - **Verified the CONSUMER, not a proxy.** The bug existed because "python says invalid JSON" had been
+    treated as truth while CC behaved differently. Both the finding AND the fix were confirmed through CC's
+    own `--debug` load log (banner file → `projectSettings 0 rule(s)`; comment-free → the real count) — not
+    just python. python `json.load` is used in the check only as a strict *proxy* that matches CC's rejections.
+  - **JSONC-strip would have been a *second* bug.** The first O#3 fix stripped comments then parsed, on the
+    belief CC accepts comments. It doesn't — so that check would PASS a comment-bearing file CC silently
+    drops. Reverted to strict. (The review's original `python json.load` suggestion was right; my earlier
+    "JSONC correction" was wrong — a proxy-vs-consumer trap, caught by testing the consumer.)
+  - **Command-pattern join, not a table parser.** Extract the backticked `Tool(...)` rules from the marked
+    table block, grep settings for each (whitespace-normalized), WARN if any named rule isn't wired. The
+    floor's own `ask(git push)` does not satisfy a table naming `Bash(blog-publish *)` — proven.
+  - **Recurrence prevention in the AUDIT, not just O.** O catches it at adoption; the audit (every edit)
+    FAILs a `//` re-added out of habit. The durable half.
+  - **Scope held.** The docker `--privileged` guard and the managed-floor-verify script (both §9.2) are
+    adjacent but separate — flagged, not folded in.
+- **Signal to watch.** Do adopting projects' comment-free settings actually load their rules in the field
+  (the debug-log check confirms it here)? Does a re-added `//` hit the loud FAIL rather than a silent void?
+  If CC ships JSONC (#17968), this whole entry reverses — the version-scoped teaching is the tripwire.
+- **Retrospect.** *(open — revisit at the next CC upgrade, or when #17968 changes state.)*
+
+---
+
 ## 2026-07-06 — Kit-update proposals (item Y — re-review against a newer kit)
 
 - **Change.** Built item **Y** — the living-adoption loop, docs-only (no new machinery, per §Y). A
