@@ -138,9 +138,10 @@ plus audit guards; graduate to the wiki when the project outgrows them.
 Everything after the floor + baseline arrives **incrementally, pulled by real events**, not
 as a big-bang harness sprint that halts feature work:
 
-- Every bug fixed from now on leaves the kit's three artifacts (Principle 2's routing
-  rule): a guardrail line, an audit grep, a wiki incident page. Six weeks of ordinary work
-  builds more real harness than any retrofit weekend.
+- Every bug fixed from now on leaves its three-part trail (the routing rule, Principle 2,
+  applied to a bug fix — it touches three of the four homes; a fix doesn't change *intended*
+  behavior, so the spec isn't in its trail): a guardrail line, an audit grep, a wiki incident
+  page. Six weeks of ordinary work builds more real harness than any retrofit weekend.
 - The maturity triggers (kickoff §1.3a) fire on the same intake answers as greenfield:
   first real credential → the secret add-ons; a second committer → server-side branch
   protection + CODEOWNERS + audit-in-CI (§1.3b).

@@ -23,7 +23,9 @@
      model). The audit (kickoff §1.6) WARNs when any of them has a commit NEWER than this spec:
      a signal to **reconcile in whichever direction is right** — either intent changed and the
      spec is stale, or the code drifted from still-correct intent. It does NOT mean "the spec is
-     wrong." Keep the list short + real; an unfilled `PUT-PATHS-HERE` placeholder is simply skipped. -->
+     wrong." Keep the list short + real; an unfilled `PUT-PATHS-HERE` placeholder is simply skipped — and
+     so is a listed path you later rename without fixing it here, so if you move a file, update this line
+     too (a path that no longer exists is skipped, not flagged). -->
 
 ## Problem & goal
 <The one job this exists to do, in 1–3 sentences. What's broken/missing today.>
