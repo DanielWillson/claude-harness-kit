@@ -82,6 +82,14 @@ risk tier · free-text **origin** — with no ROADMAP/maintainer fields, because
 - **What it replaced.** Net-new artifact + doctrine. The README shelf-life section previously framed *only*
   model upgrades as maintenance events; now names tool upgrades too. The audit's committed-scaffolding comment
   now lists `HARNESS_MANIFEST.md` among the ships-at-output-name files kept out of the alternation.
+- **Self-contained template (caught in review).** The *shipped* root template is a project-retained artifact, so
+  it must not cite kit-only docs (`§1.4`, `§1.6b`, `README §…`, `item J`) that vanish once the scaffolding
+  steps away — the same rule the `HARNESS_LOG.md` template states for itself ("a reference nobody here can
+  resolve is worse than none"). First draft leaked those refs; scrubbed to inline the substance ("re-run your
+  security prove-it-bites checks: attempt a denied read → confirm blocked…"). Only the root template needs this;
+  this kit-internal `wiki/` copy *may* cite maintainer docs and does. A verification-gap note: the selftest ran
+  in the kit repo where `§1.4` resolves, so the break was invisible to it — it only surfaces in a project that
+  kept the template without the kickoff.
 - **Shelf-life/risk class.** **Appreciating** — as the harness accretes parts and the model/tool churn
   continues, a readable freshness registry earns more, not less. Zero blast radius (docs + a template; no
   executable path added).
