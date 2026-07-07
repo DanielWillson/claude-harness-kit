@@ -37,7 +37,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1 — SHA-pinned per §1.3b / templates/ci-audit.yml; re-pin via `gh api repos/actions/checkout/git/refs/tags/<tag>`
 
       - name: bash version (recorded for context)
         run: bash --version | head -1
@@ -55,3 +55,17 @@ jobs:
       - name: Eval-runner regression self-test (§9.1 item A guard)
         shell: bash
         run: bash evals-template/eval-runner.selftest.sh
+
+      - name: Python syntax — py_compile over every kit .py
+        shell: bash
+        run: |
+          set -uo pipefail
+          rc=0
+          while IFS= read -r f; do
+            if python3 -m py_compile "$f"; then echo "  ok    $f"; else echo "  FAIL  $f"; rc=1; fi
+          done < <(find . -name '*.py' -not -path './.git/*')
+          exit $rc
+
+      - name: Wiki-engine regression self-test (claude-wiki-base.py FAIL paths)
+        shell: bash
+        run: bash claude-wiki-base.selftest.sh

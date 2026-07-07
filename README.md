@@ -103,7 +103,10 @@ we call them directives and verifiers — the same idea in plainer words.)
 
 The two halves form a loop, and a person closes it by hand. When a verifier keeps catching the
 same kind of mistake, the fix isn't to nag the agent — it's to *strengthen a directive* so the
-mistake can't happen again. A bug becomes a permanent check in the health script. A nasty
+mistake can't happen again. That includes the case where nothing was strictly *broken*: when
+the agent's choice was reasonable given what it could see and you still had to correct it, the
+missing strand is an assumption you never wrote down — fix the map (the instruction file, the
+spec, the skill), not just the output, or the same gap reappears next session. A bug becomes a permanent check in the health script. A nasty
 surprise becomes a one-line warning in the instruction file. A dead end becomes a written-up
 "we tried this, here's why it failed" page in the wiki. Even a *run* that went wrong or ran up a
 surprise bill — no code bug at all — gets post-mortemed into a new check. Every mistake leaves
@@ -179,11 +182,23 @@ Each file is labeled with what it does, and why it earns a place.
   short README defining the fixture format and the two grade types, plus two example `.eval.md`
   cases (one golden, one rubric). Like the audit base, it ships mostly empty on purpose — grow
   it to roughly 8–15 representative cases over time.
+- **`claude-wiki-base.py`** — the starter **wiki maintenance engine**, copied into the
+  project as `wiki/wiki.py`. The wiki's entire defense against rotting into confident lies
+  is mechanical — lint, reconcile-against-code, staleness clocks, coverage, gap markers —
+  so it ships as runnable, selftested code rather than as a spec the kickoff session must
+  reimplement. (Its FAIL paths are proven by `claude-wiki-base.selftest.sh`, run in the
+  kit's own CI.)
 - **`scripts/harness-metrics.sh`** — a starter **harness ROI scorecard**, copied into the project
   as `scripts/harness-metrics.sh`. It prints a handful of cheap numbers — the `CLAUDE.md` line
   count, the audit's check count — and appends them to a trend log, so a project can *prove* its
   safety net is paying off rather than assume it: the gauge on the project's own engine, glanced at on
   a slow cadence. It computes only what's free and stubs the rest as explicit human notes.
+- **`scripts/kit-conformance.sh`** — the **adoption verifier**, seeded into the project alongside
+  the audit. Where the audit asks "is the *code* healthy?", this asks "is the *harness* actually
+  installed?" — a roster check over everything kickoff should have produced (the contract, the
+  settings floor, a valid audit, the evals, the wiki), run once after setup and periodically
+  after. It FAILs only what no correct adoption could omit and WARNs what a lean project may
+  legitimately skip, so a small project passes clean-with-warnings.
 - **`HARNESS_LOG.md`** — a fill-in **harness change log**, seeded at the project root (the name is
   fixed so tooling can find it). The qualitative companion to the scorecard: where a human records
   *what changed in the harness and why*, one append-only entry per change. The numbers say *that*
@@ -223,6 +238,9 @@ Each file is labeled with what it does, and why it earns a place.
   on LLMs: the measured failure modes, the engineering answers to each, the numbers worth
   memorizing, and a three-item reading list. Start here if you want to *understand* before
   you *install*.
+- **`glossary.md`** — the kit's **term index**: every piece of jargon the documents lean on
+  (harness, directive, verifier, the safety-level ladder, tier names), each defined once and
+  reconciled with where the docs use it. For the reader who hits an unfamiliar term mid-document.
 - **`SKILL.md`** — the wrapper that lets the whole kit double as an installable **skill**
   (see "How to use it" below). It adds a second delivery mechanism, not new content.
 - **`wiki/`** — the kit's **own knowledge base**, eating its own cooking: the verified
@@ -418,6 +436,21 @@ in the open over the past year. Each of these is worth reading directly:
   what the model can't do on its own."*
   [anthropic.com](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) ·
   [anthropic.com](https://www.anthropic.com/engineering/harness-design-long-running-apps)
+- **Thariq Shihipar (Anthropic, Claude Code team) — *A Field Guide to Fable: Finding Your
+  Unknowns* (July 2026) and *Using Claude Code: The unreasonable effectiveness of HTML*
+  (May 2026).** The map/territory framing: everything you hand the agent — prompt, contract,
+  skills, context — is a *map* of the work; the codebase and its real constraints are the
+  *territory*; the gap between them is your *unknowns*, and autonomy shifts the bottleneck
+  from "can the model do the task" to "did you specify the task correctly" — a stronger
+  model doesn't remove the need for a good map, it **raises the price of a bad one**,
+  because it executes an unstated assumption thoroughly and quietly. Four practices the kit
+  absorbs: interview-before-plan (Principle 6), the two-reader change record (Principle 4),
+  fix-the-map-not-just-the-output (§1.6), and format-follows-reader — HTML for throwaway
+  human-read reports, markdown for the durable agent-read store (Principle 2).
+  [claude.com](https://claude.com/blog/using-claude-code-the-unreasonable-effectiveness-of-html) ·
+  companion guides at explainx.ai:
+  [map/territory](https://explainx.ai/blog/map-is-not-territory-fable-5-thariq-unknowns-2026) ·
+  [HTML](https://explainx.ai/blog/unreasonable-effectiveness-html-claude-code-thariq-2026)
 - **Andrej Karpathy — the *LLM wiki* pattern (April 2026).** The direct inspiration for the
   kit's wiki. The insight: instead of having an AI re-read raw documents from scratch on every
   question, have it build and maintain a structured wiki of plain notes that *compounds* over

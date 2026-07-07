@@ -12,6 +12,15 @@
 > Part 2 (principles) and apply them to all work that follows. Confirm setup is
 > done, then ask for the spec.
 >
+> **Context discipline (this guide is ~32K tokens — don't hold it all):** drive execution
+> from the **Quick Checklist** near the end. Read Part 0's header, §1.0–§1.0a, and the
+> checklist first; then pull each section in **only as its checklist item comes up** — most
+> of this file is rationale you need once, not context you need resident. Skip the
+> content/editorial appendix unless the project is one; defer **Part 3** until a run
+> actually fans out. And don't self-report completion at the end — the roster check is
+> `scripts/kit-conformance.sh` (§1.6c); run it and show the result. (This is the kit's own
+> context-is-a-budget doctrine applied to the kit.)
+>
 > **⚠️ Stack-agnostic — every concrete tool below is an EXAMPLE, not an assumption.**
 > This guide carries examples from one project (Python/`uv`/FastAPI + React/Vite/
 > `npm`, on macOS): `npm`/`uv`/`pytest`/`ruff`, `UV_OFFLINE`, "Python 3.12",
@@ -148,7 +157,7 @@ numbers. Below that volume the per-slice rates are noise; don't build the ledger
 posture tiers are the right model.
 
 ### 1.0a Intake — gather these once, up front
-Nine answers shape several setup steps; collecting them in one short exchange beats
+Ten answers shape several setup steps; collecting them in one short exchange beats
 stopping to ask three or four separate times mid-ritual. Two of them (Q8–Q9) are the
 load-bearing **safety** questions — each **defaults to the locked-down choice, so skipping is
 safe**. Ask, then execute uninterrupted:
@@ -161,6 +170,7 @@ safe**. Ask, then execute uninterrupted:
 7. **Go-live boundary** — do you ship by `git commit` (push/merge), or by something else (tar/rsync, copying files, a deploy step, an auto-merge)? (drives *where* the doc-freshness check lives — wiki guide §4: a commit-time check can't guard a release that never goes through a commit.)
 8. **Does THIS project's own code read its `.env` at runtime?** **Default NO** — the floor already denies secret reads (§1.3), and that stands. Answer **YES** only if a script genuinely loads it — then carve the scoped exception exactly as §1.3's "real floor" note prescribes (drop that one path from `deny`; never add an `allow`; machine creds stay denied). Skipping leaves the file denied — the safe state.
 9. **Will this project ever hold a real credential or token** (an API key, an OAuth token, a deploy secret — anything live)? **Default NO.** If **YES**, it gates the §1.3a secret-hardening add-ons (enumerated there). Shared-repo hardening is already gated by Q6 — don't re-answer it here.
+10. **Does this deploy as a running system** (a server, service, or site — rather than a local tool or library)? **Default NO; nothing gates on it.** If **YES**, it opens the PRD's *Production runtime* section (path to production + staging, how the *running app* loads its own secrets — not the dev `.env` this floor denies — observability, and deploy rollback). The kit hardens the *development session*; the deployed system's operational needs live in the PRD **or nowhere** — this question exists so "the kit didn't flag it" never reads as "you don't need it."
 
 The sections below still explain *why* each answer matters at its point of use — this just
 front-loads the asking so setup doesn't stall on four separate questions. Don't defer the
@@ -943,8 +953,10 @@ wiki does. It's the home for knowledge that fits neither the contract nor a comm
   nothing else captures and which stops agents (and you) re-walking dead ends.
 
 Read the companion guide for the full pattern. At kickoff, do the lightweight version:
-scaffold `wiki/` + its `SCHEMA.md` + a stdlib maintenance script (lint / reconcile /
-coverage / gaps), and **seed 2–3 real incident/decision pages from actual history** so the
+scaffold `wiki/` + its `SCHEMA.md` + the maintenance engine — copy the kit's
+**`claude-wiki-base.py`** to `wiki/wiki.py` (lint / index / reconcile / stale / coverage /
+gaps / metrics, stdlib-only, FAIL paths already selftested; gitignore
+`wiki/.last-reconcile`) — and **seed 2–3 real incident/decision pages from actual history** so the
 pattern is visible. The CLAUDE.md skeleton (§1.5) already carries the load-bearing
 directive — *read the wiki first; project knowledge goes in the repo, never in machine-local
 memory* — **keep it**: an unread wiki is a write-only sink, and without the anti-memory line
@@ -1023,6 +1035,16 @@ checks. The valuable part grows over time:
   stale," the durable fix isn't a fourth patch — it's **one** guard that kills the class (a
   broader grep, a `CLAUDE.md` clarification, a reconcile rule). Propose it; never auto-apply.
   Same safety net, aimed at the *pattern* instead of the *instance*.
+- **Reasonable-but-wrong means the *map* was wrong — fix the directive, not just the output.**
+  Some corrections aren't bugs at all: the agent did something defensible *given what it
+  could see*, and you steered it back. The deep defect there is an assumption missing from
+  the map you handed it — obvious to you, written nowhere (Shihipar's "unknown knowns").
+  Fixing only the output guarantees a repeat, because the next session gets the same map.
+  Ask *"what line in `CLAUDE.md` / the spec / the relevant skill would have made this
+  choice impossible?"* — and add it in the same sitting. This is the bug→guard loop aimed
+  at the *directives* instead of the checks, and it's how the contract earns its lines:
+  each one traceable to a real correction, which is also exactly the per-line test
+  (*"would removing this cause mistakes?"*) run in reverse.
 - **The safety net has a *second feed*: bad or expensive *runs*, not just fixed bugs (item C).**
   Everything above grows the net from *code bugs*. But an agent run can go wrong with no bug in
   sight — it loops for an hour, takes a path you didn't want, produces slop, or simply costs 5× what
@@ -1272,6 +1294,24 @@ Tell the user setup is done, remind them to **enter auto mode (`Shift+Tab` cycle
 permission mode) and restart so the sandbox initializes** (the sandbox comes from settings, not
 from `Shift+Tab`), then ask for the spec.
 
+**Close with an HTML kickoff report — quiz included (Standard+; skip for a throwaway).**
+Before asking for the spec, emit a small, self-contained **HTML report** of what was just
+installed: each artifact created, each gate wired **with its bite-test result** (the command
+attempted → blocked/prompted, verbatim), and what the tier skipped and why. This is
+Principle 2's format-follows-reader rule aimed at the one document the user most needs to
+*actually read* — a green checklist in scrollback doesn't get re-read; a report does. **End
+it with a ~5-question comprehension quiz** (Shihipar's post-implementation practice): which
+layer is the hard floor and why, what the sandbox does and doesn't cover, what a `//` in
+`settings.json` does, who reviews against which source of truth, where a new durable fact
+goes. The harness's weakest link is a human who doesn't know what their own gates do —
+verifying the *person* understood is the cheapest check in the whole kit, and this is its
+first instance. The report is an **ephemeral review surface, not documentation** — leave it
+uncommitted (or under a gitignored `reports/`); the durable truth is `kit-conformance.sh`
+plus the files themselves. **When the spec arrives, run Principle 6's
+interview-before-plan on it** — one question at a time, prioritized by which answers would
+change the architecture — before anything gets built. The spec is a map, and the moment it
+lands is the cheapest point in the whole project to find its holes.
+
 **The kit is scaffolding — it drops away after buildout.** This kit (this guide, the wiki
 guide, the templates, the audit *base*) is used **once**, at kickoff. **Do not commit it into
 the project repo, and do not `@`-import it from `CLAUDE.md` or paste its content there** —
@@ -1358,6 +1398,17 @@ history), it goes in the wiki, **not** `CLAUDE.md`. And a *contradiction the age
 adjudicate* — two sources of equal standing that disagree — goes to the wiki's conflicts
 register (`llm-wiki-kickoff.md` §2.10), **surfaced, not silently resolved.**
 
+**Format follows reader (and lifespan).** The durable, agent-read store — `CLAUDE.md`, the
+wiki, the spec — stays **markdown/plain text**: diffable, greppable, and reconcilable
+against the code, which is the property the whole knowledge layer rests on. The
+*throwaway, human-read surfaces* — a plan surfaced for review, a morning-after run report,
+a PR explainer, a research synthesis — earn **HTML** instead (Shihipar: past ~100 lines,
+humans stop actually reading markdown; HTML buys tabs, diagrams, and annotated diffs that
+get a human to genuinely engage — and review capacity, not generation, is the scarce
+resource). Hold the line between them: an HTML artifact is an *ephemeral review surface*,
+never the durable store — a knowledge base you can't diff or grep is one you can't
+reconcile.
+
 *Field cross-reference (the same split, in the emerging shared vocabulary):* this is what
 OpenAI's Codex team calls treating the contract as a **"table of contents,"** not an
 encyclopedia, over a knowledge base that is the **"system of record."** Keep the kit's two
@@ -1392,6 +1443,15 @@ Commit history is documentation of intent over time.
   clean when the Stop hook fires (the hook is a silent fallback, not the primary
   committer).
 - Imperative subject ≤ ~72 chars; body explains the *why* and trade-offs.
+- **A change record has two readers — write for both.** A commit body (or, once work lands
+  via PRs, the PR description) is read twice: by a **human reviewing now**, and by an
+  **agent mining history later** (git history is part of the knowledge layer, Principle 2).
+  When one blob serves both badly, split it (Shihipar's practice): a **human section** —
+  what to look at, before/after, a screenshot or GIF for UI, the one risky decision — and
+  an **agent section** — dense and structured: decisions made, deviations from the plan and
+  why, constraints discovered. The agent section is exactly the raw material a wiki
+  decision page graduates from — written once at commit time, harvested at write-back time
+  instead of reconstructed from the diff.
 - Code + docs + tests travel together in one logical commit.
 - **Auto mode makes you the deliberate committer, and small commits are the review
   surface.** Auto mode removes the approval pauses where you'd normally hand-commit, so the
@@ -1468,6 +1528,17 @@ For anything beyond a small, obvious change, write a short plan/approach *before
 building — the cheapest way to catch wrong-direction work, when a plan is throwaway
 and a built-out wrong approach is not. But **don't make the plan a human-approval
 gate** (that fights autonomy):
+- **Interview before you plan — the plan is drawn on a map, and the map has holes.**
+  Everything handed to the agent (the prompt, the contract, the spec) is a *map* of the
+  work; the codebase and its real constraints are the *territory*; the gap is your
+  **unknowns** (Thariq Shihipar — see the README sources). The most dangerous kind is the
+  assumption so obvious to *you* that it's written nowhere — and a capable model executes
+  an unstated assumption thoroughly and *quietly*, so autonomy raises the price of a bad
+  map rather than lowering it. Two cheap moves, run **before** the plan exists: have the
+  agent **interview the user** — one question at a time, prioritizing the questions whose
+  answers would change the architecture — and, in a domain unfamiliar to the user, a
+  **blindspot pass** ("what does someone doing X for the first time always get wrong?").
+  Cheapest verifier in the whole chain: it runs before there is anything to be wrong.
 - Interactive work: surface the plan briefly and proceed unless the user objects.
 - Autonomous / substantial work: **have the plan reviewed by an adversarial agent
   (or a small judge panel) — not by pausing for a human.** An independent pass that
@@ -1629,7 +1700,9 @@ don't have.
    are exactly what parallel agents violate inconsistently (sign conventions, immutable
    fields, "collapse in place not duplicate", "never load all rows into memory"). When the
    wave lands, the durable *why* behind any decision resolved here graduates to a wiki
-   decision page — the snapshot is throwaway, the rationale isn't. Pre-loading that snapshot is deterministic
+   decision page — the snapshot is throwaway, the rationale isn't. And run Principle 6's
+   interview/blindspot pass **before** the freeze: the brief is a map, and an unknown
+   frozen into it gets executed by every subagent in the wave. Pre-loading that snapshot is deterministic
    **context-hydration** (Stripe's term: *"hydrate the context"*) — distinct from scouting
    (#1): scouting is the agent *discovering* an unknown work-shape; hydration is *handing* it
    known-relevant context up front. They compose. External intel a run needs — ticket text, a
@@ -1690,7 +1763,9 @@ don't have.
    agent (or the morning-after you) evaluate against the DoD — never the agent that
    built it. Asked to grade their own work, agents confidently praise it; Anthropic's
    long-running-agent harness work measured exactly this and split into generator and
-   evaluator roles because of it.
+   evaluator roles because of it. For a big run, have the judge emit its findings as a
+   small **HTML report** — annotated diffs, findings ranked by severity — Principle 2's
+   format-follows-reader rule, applied where review attention matters most.
    And **green build+tests ≠ it renders**: when the UI matters, actually run the
    app and look. Keep a small **dev-seed script** that loads demo data so the app
    has something to show; then either hand the user exact run steps, or (with
@@ -1759,7 +1834,11 @@ don't have.
 14. **For work that outlives one context window, leave the progress log and task list a
     fresh session can pick up.** Anthropic's long-running-agent harness converged on the same shape as this
     kit's wiki discipline, plus three specifics worth copying for any multi-session
-    run: an append-only **progress log** (what happened, what's next), a
+    run: an append-only **progress log** (what happened, what's next) carrying a standing
+    **Deviations** heading (when an edge case forces a departure from the plan, take the
+    conservative option and record it there — Shihipar's implementation-notes practice; the
+    morning review reads Deviations first, because a deviation is where the plan's map met
+    the territory), a
     **machine-readable task list** whose only editable field is pass/fail status (scope
     discipline by structure — one feature at a time), and a fixed **preflight** at
     session start — read the git log, the progress log, the task list, *then* pick up
@@ -1808,11 +1887,12 @@ don't have.
 - [ ] (optional — once the harness has several moving parts) `HARNESS_MANIFEST.md` seeded at repo root — one row per part, columned by *assumes × last-verified × re-verify trigger* (assumptions + freshness — **not** presence, which is conformance, nor history, which is the log); its depreciating rows name the **Claude Code upgrade → re-run §1.4** trigger (§1.6a, items W + J)
 - [ ] (if a 2nd committer — Q6) secret-only `hooks/pre-commit` installed + `core.hooksPath` set + verified by a real blocked commit (§1.3b); `bash scripts/audit.sh` wired into CI
 - [ ] (if a spec/PRD exists) its load-bearing invariants extracted into the audit INVARIANTS + `CLAUDE.md`; kept as a **living** doc (item E) — `reconcile-code` anchor filled, at repo root, updated in the same commit as any deliberate behavior change (§1.5c, §1.7)
+- [ ] (if it deploys as a running system — Q10) the PRD's **Production runtime** section filled or explicitly dated: path-to-prod + staging, runtime secrets (not the dev `.env`), observability, deploy rollback — these live in the PRD or nowhere (§1.0a)
 - [ ] routing rule applied: guardrail → `CLAUDE.md`, machine-check → audit, intended behavior → spec/PRD, full story (code-why/dead-ends/history) → wiki (Principle 2)
 - [ ] `CLAUDE.md` carries the **Knowledge & memory** directive: read-the-wiki-first + project-knowledge-in-the-repo-NOT-`~/.claude` (§1.5)
 - [ ] `CLAUDE.md` carries a `## Review` block: reviewer named + the source(s) of truth they verify against (audit / spec / wiki, **not "looks right"**) + small-batch discipline (§1.5)
 - [ ] human-facing `README.md` created from `readme-template.md`; `reconcile-code` anchor filled with its real source paths so the audit can flag drift (§1.5c)
-- [ ] (if non-throwaway) knowledge wiki scaffolded + seeded with 2–3 real incident/decision pages; **both** maintenance triggers wired (`/wiki` + the unattended reconcile pass); `WIKI_LINT_CMD` wired into the audit (see `llm-wiki-kickoff.md`)
+- [ ] (if non-throwaway) knowledge wiki scaffolded + seeded with 2–3 real incident/decision pages; engine seeded from `claude-wiki-base.py` → `wiki/wiki.py` (`.last-reconcile` gitignored); **both** maintenance triggers wired (`/wiki` + the unattended reconcile pass); `WIKI_LINT_CMD=python3 wiki/wiki.py lint` wired into the audit (see `llm-wiki-kickoff.md`)
 - [ ] (if non-throwaway) behavioral evals seeded — `evals-template/` → `evals/` + `claude-eval-base.sh` → `scripts/eval.sh`, one golden + one rubric case; re-run at a model upgrade / big `CLAUDE.md` edit / new skill (§1.6b)
 - [ ] `scripts/kit-conformance.sh` seeded; `bash scripts/kit-conformance.sh` reports **zero FAIL** after setup — the *adoption* verifier (is the harness installed? — not code health, that's the audit): FAILs only the irreducible floor, WARNs what a lean project may skip; **fan out per area for a big adoption** (§1.6c, item O)
 - [ ] (if UI) design tokens + a starter primitive seeded before the second screen (Principle 5)
@@ -1821,6 +1901,7 @@ don't have.
 - [ ] (evolving a live system) baseline pinned before a calc refactor; data migration → backup + branch + two-part rollback (Principle 10)
 - [ ] (if the project has out-of-git state — DB / hosted config / deploy / external backend) before an agent-assisted change to it: **snapshot + documented way back + a recovery owner** (item S / Principle 10); a pure library needs none
 - [ ] (if a live system an agent could damage) `RUNBOOK.md` seeded at root — the forward contain → revoke/rotate → identify → undo-or-notify → safeguard procedure, kept where a stressed human finds it fast (item U, §1.3a)
+- [ ] (Standard+) **HTML kickoff report** emitted — artifacts + gates with verbatim bite-test results + tier skips — ending in the ~5-question comprehension quiz; left uncommitted (ephemeral surface, not documentation) (§1.7)
 - [ ] user reminded to enter auto mode (`Shift+Tab`) **and restart so the sandbox initializes** (sandbox is from settings, not `Shift+Tab`)
 - [ ] noted the maturity trigger: it **adds conditional hardening above the always-on floor** (Q9 secret add-ons · Q6 server-side + CODEOWNERS) — *not* a switch to a more restrictive mode (the managed hard floor is **Part 0**, done once per machine)
 - [ ] principles internalized; ready for the spec
