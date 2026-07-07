@@ -932,3 +932,74 @@ a gap between what the kit teaches and what it ships.
   problem without deleting files the kit didn't author (each item's durable content already lives in this
   ROADMAP's write-ups). **Reversible maintainer call:** delete outright, or track-with-index + item-H anchor
   discipline, remain available if preferred.
+
+---
+
+## 10. Next-horizon backlog — candidates beyond A–Y (2026-07-07)
+
+**What this is.** With the A–Y tail closed (§8) and the §9 defect sweep closed, the original
+Fable review is fully built. This section opens the *next* backlog — candidate items derived
+**only from the frontier themes already stated in §4**, so no new external claim is introduced
+here that would need live-URL verification before it could ship (Lesson 7); each candidate points
+back at §4's already-sourced framing. These are **proposals, not built** — the same status the
+A–Y items had at the top of this doc — recorded so the forward direction isn't lost. Same
+project-agnostic constraint as everything above (§2's steer): never assume a business, a team, or
+even a codebase where the theme generalizes past one. Lettering continues the sequence (Z, AA, AB);
+"if you do only one, **Z**" — it has the clearest near-term leverage and builds on shipped items.
+
+| # | Candidate | Impact | Type | Status |
+|---|---|---|---|---|
+| **Z** | **Agent-fleet economics** — model routing + cost-governed orchestration | High | Frontier/Unique | *proposed* |
+| **AA** | **Non-code companion track** — generalize the harness past code (humble pointer) | Medium | Frontier | *proposed* |
+| **AB** | **Cross-tool portability watch** (`AGENTS.md` / AAF) — a *don't-build-yet* watch-item | Lower | Hygiene | *proposed* |
+
+### Z. Agent-fleet economics — model routing + cost-governed orchestration *(new)*
+§4 names the shift from single agent → **orchestrated fleets governed by economics**
+(cost-per-merged-change, model routing). The kit already *measures* the cost (**B**'s scorecard —
+tokens/$ per merged change) and *captures* the pathological runs (**C** — the expensive-run feed),
+but it has no **directive** layer for the two economic decisions a fleet forces: **(1) route by
+model tier** — a cheap/fast model for mechanical stages (mass edits, greps, format passes), a
+strong model reserved for judgment and verification — and **(2) cap the fan-out by budget**, tied
+to the scorecard, so an orchestration can't quietly cost 20× (the verified >20× long-running-app
+figure in **B** is the cautionary number). Part 3's fan-out playbook has the *mechanics* of
+spawning subagents but not the *when / which model / how much* governance. **Build (humble):** a
+short routing heuristic + a budget-cap pattern in the guide (and, if it earns it, a scorecard
+column for cost-per-stage), **not** a scheduler or an auto-router — name the decision, wire the cap
+deterministically where money is at stake (the **R** action-risk posture applied to spend). Builds
+directly on **B** + **C**; the frontier beat is turning "we measure cost" into "we *govern* it."
+
+### AA. Non-code companion track — generalize the harness past code *(new)*
+§4 states it plainly: the load-bearing ideas — **directives/verifiers, verification, provenance,
+action-risk gating** — apply to *any* AI-assisted knowledge or process work (research, writing,
+analysis, ops), and the kit should **stay code-first while framing the principles so they don't
+assume a codebase**. This is the biggest *new-territory* candidate and the one the standing steer
+(grow the kit into new ground, not just polish) points at — but it must land as a **pointer, like
+D**, not a second kit. **Build (humble):** a short companion note mapping each principle to its
+non-code form — the **audit** → a checkable rubric over the deliverable; the **wiki** → the same
+reconciled knowledge store (already agnostic); **evals** → the fixture schema (**A** already says
+"incl. non-code workflows"); the **provenance rule** → the citation standard for any factual claim
+(already the evals' rule). A working instance already lives *in this repo* to point at — the
+`deep-research` skill (fan-out → fetch → adversarially verify → cite) is the harness pattern applied
+to research, not code. **Risk to manage:** scope creep. The deliverable is a *mapping note* that
+proves the principles travel, not a parallel guide — the moment it starts assuming a non-code
+domain's specifics, it's over-built.
+
+### AB. Cross-tool portability watch (`AGENTS.md` / AAF) — a watch-item, not a build *(new)*
+§4 flags `AGENTS.md` as a now-real cross-tool convention (Linux Foundation **Agentic AI
+Foundation**; 20+ tools; nearest-file precedence) **and** cautions: *don't build multi-runtime
+portability machinery prematurely for a single-tool project.* The kit already treats `AGENTS.md`
+as a filename alias and both verifiers resolve `CLAUDE.md`-or-`AGENTS.md` (§9.1 O#4). So this is
+deliberately recorded as a **standing watch-item, not a build** — the roadmap documenting the
+*decision to wait*, which is itself a durable output (it stops a future session from
+speculatively building portability scaffolding). **Trigger to promote from watch → build:** a
+project that *actually* runs two agent runtimes over the same repo, not before. Until then: track
+the standard's maturation, keep the alias handling correct, ship nothing. (This is the **J/W**
+shelf-life discipline — a *depreciating*-class assumption with a named re-check trigger — applied
+to an external standard instead of a Claude Code version.)
+
+**Not promoted to candidates (folded into §4 as field observations, not buildable items):** the
+*hardest challenge* — reliably evaluating non-deterministic agents — and *long-horizon coherence +
+agent memory* are the meta-problems **A**/**I** already engage as far as a project-agnostic kit
+honestly can; they're benchmarks to *watch* (METR's time-horizon metric, SWE-Bench Pro, SWE-EVO,
+LongCodeBench), not artifacts to seed. Naming them as non-items is deliberate — it records that the
+kit isn't going to pretend to solve the field's open problem, only to track it.
