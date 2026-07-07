@@ -12,6 +12,15 @@
 > Part 2 (principles) and apply them to all work that follows. Confirm setup is
 > done, then ask for the spec.
 >
+> **Context discipline (this guide is ~32K tokens — don't hold it all):** drive execution
+> from the **Quick Checklist** near the end. Read Part 0's header, §1.0–§1.0a, and the
+> checklist first; then pull each section in **only as its checklist item comes up** — most
+> of this file is rationale you need once, not context you need resident. Skip the
+> content/editorial appendix unless the project is one; defer **Part 3** until a run
+> actually fans out. And don't self-report completion at the end — the roster check is
+> `scripts/kit-conformance.sh` (§1.6c); run it and show the result. (This is the kit's own
+> context-is-a-budget doctrine applied to the kit.)
+>
 > **⚠️ Stack-agnostic — every concrete tool below is an EXAMPLE, not an assumption.**
 > This guide carries examples from one project (Python/`uv`/FastAPI + React/Vite/
 > `npm`, on macOS): `npm`/`uv`/`pytest`/`ruff`, `UV_OFFLINE`, "Python 3.12",
@@ -1023,6 +1032,16 @@ checks. The valuable part grows over time:
   stale," the durable fix isn't a fourth patch — it's **one** guard that kills the class (a
   broader grep, a `CLAUDE.md` clarification, a reconcile rule). Propose it; never auto-apply.
   Same safety net, aimed at the *pattern* instead of the *instance*.
+- **Reasonable-but-wrong means the *map* was wrong — fix the directive, not just the output.**
+  Some corrections aren't bugs at all: the agent did something defensible *given what it
+  could see*, and you steered it back. The deep defect there is an assumption missing from
+  the map you handed it — obvious to you, written nowhere (Shihipar's "unknown knowns").
+  Fixing only the output guarantees a repeat, because the next session gets the same map.
+  Ask *"what line in `CLAUDE.md` / the spec / the relevant skill would have made this
+  choice impossible?"* — and add it in the same sitting. This is the bug→guard loop aimed
+  at the *directives* instead of the checks, and it's how the contract earns its lines:
+  each one traceable to a real correction, which is also exactly the per-line test
+  (*"would removing this cause mistakes?"*) run in reverse.
 - **The safety net has a *second feed*: bad or expensive *runs*, not just fixed bugs (item C).**
   Everything above grows the net from *code bugs*. But an agent run can go wrong with no bug in
   sight — it loops for an hour, takes a path you didn't want, produces slop, or simply costs 5× what
@@ -1270,7 +1289,10 @@ single context.
 ### 1.7 Confirm and hand off
 Tell the user setup is done, remind them to **enter auto mode (`Shift+Tab` cycles the
 permission mode) and restart so the sandbox initializes** (the sandbox comes from settings, not
-from `Shift+Tab`), then ask for the spec.
+from `Shift+Tab`), then ask for the spec. **When the spec arrives, run Principle 6's
+interview-before-plan on it** — one question at a time, prioritized by which answers would
+change the architecture — before anything gets built. The spec is a map, and the moment it
+lands is the cheapest point in the whole project to find its holes.
 
 **The kit is scaffolding — it drops away after buildout.** This kit (this guide, the wiki
 guide, the templates, the audit *base*) is used **once**, at kickoff. **Do not commit it into
@@ -1358,6 +1380,17 @@ history), it goes in the wiki, **not** `CLAUDE.md`. And a *contradiction the age
 adjudicate* — two sources of equal standing that disagree — goes to the wiki's conflicts
 register (`llm-wiki-kickoff.md` §2.10), **surfaced, not silently resolved.**
 
+**Format follows reader (and lifespan).** The durable, agent-read store — `CLAUDE.md`, the
+wiki, the spec — stays **markdown/plain text**: diffable, greppable, and reconcilable
+against the code, which is the property the whole knowledge layer rests on. The
+*throwaway, human-read surfaces* — a plan surfaced for review, a morning-after run report,
+a PR explainer, a research synthesis — earn **HTML** instead (Shihipar: past ~100 lines,
+humans stop actually reading markdown; HTML buys tabs, diagrams, and annotated diffs that
+get a human to genuinely engage — and review capacity, not generation, is the scarce
+resource). Hold the line between them: an HTML artifact is an *ephemeral review surface*,
+never the durable store — a knowledge base you can't diff or grep is one you can't
+reconcile.
+
 *Field cross-reference (the same split, in the emerging shared vocabulary):* this is what
 OpenAI's Codex team calls treating the contract as a **"table of contents,"** not an
 encyclopedia, over a knowledge base that is the **"system of record."** Keep the kit's two
@@ -1392,6 +1425,15 @@ Commit history is documentation of intent over time.
   clean when the Stop hook fires (the hook is a silent fallback, not the primary
   committer).
 - Imperative subject ≤ ~72 chars; body explains the *why* and trade-offs.
+- **A change record has two readers — write for both.** A commit body (or, once work lands
+  via PRs, the PR description) is read twice: by a **human reviewing now**, and by an
+  **agent mining history later** (git history is part of the knowledge layer, Principle 2).
+  When one blob serves both badly, split it (Shihipar's practice): a **human section** —
+  what to look at, before/after, a screenshot or GIF for UI, the one risky decision — and
+  an **agent section** — dense and structured: decisions made, deviations from the plan and
+  why, constraints discovered. The agent section is exactly the raw material a wiki
+  decision page graduates from — written once at commit time, harvested at write-back time
+  instead of reconstructed from the diff.
 - Code + docs + tests travel together in one logical commit.
 - **Auto mode makes you the deliberate committer, and small commits are the review
   surface.** Auto mode removes the approval pauses where you'd normally hand-commit, so the
@@ -1468,6 +1510,17 @@ For anything beyond a small, obvious change, write a short plan/approach *before
 building — the cheapest way to catch wrong-direction work, when a plan is throwaway
 and a built-out wrong approach is not. But **don't make the plan a human-approval
 gate** (that fights autonomy):
+- **Interview before you plan — the plan is drawn on a map, and the map has holes.**
+  Everything handed to the agent (the prompt, the contract, the spec) is a *map* of the
+  work; the codebase and its real constraints are the *territory*; the gap is your
+  **unknowns** (Thariq Shihipar — see the README sources). The most dangerous kind is the
+  assumption so obvious to *you* that it's written nowhere — and a capable model executes
+  an unstated assumption thoroughly and *quietly*, so autonomy raises the price of a bad
+  map rather than lowering it. Two cheap moves, run **before** the plan exists: have the
+  agent **interview the user** — one question at a time, prioritizing the questions whose
+  answers would change the architecture — and, in a domain unfamiliar to the user, a
+  **blindspot pass** ("what does someone doing X for the first time always get wrong?").
+  Cheapest verifier in the whole chain: it runs before there is anything to be wrong.
 - Interactive work: surface the plan briefly and proceed unless the user objects.
 - Autonomous / substantial work: **have the plan reviewed by an adversarial agent
   (or a small judge panel) — not by pausing for a human.** An independent pass that
@@ -1629,7 +1682,9 @@ don't have.
    are exactly what parallel agents violate inconsistently (sign conventions, immutable
    fields, "collapse in place not duplicate", "never load all rows into memory"). When the
    wave lands, the durable *why* behind any decision resolved here graduates to a wiki
-   decision page — the snapshot is throwaway, the rationale isn't. Pre-loading that snapshot is deterministic
+   decision page — the snapshot is throwaway, the rationale isn't. And run Principle 6's
+   interview/blindspot pass **before** the freeze: the brief is a map, and an unknown
+   frozen into it gets executed by every subagent in the wave. Pre-loading that snapshot is deterministic
    **context-hydration** (Stripe's term: *"hydrate the context"*) — distinct from scouting
    (#1): scouting is the agent *discovering* an unknown work-shape; hydration is *handing* it
    known-relevant context up front. They compose. External intel a run needs — ticket text, a
@@ -1690,7 +1745,9 @@ don't have.
    agent (or the morning-after you) evaluate against the DoD — never the agent that
    built it. Asked to grade their own work, agents confidently praise it; Anthropic's
    long-running-agent harness work measured exactly this and split into generator and
-   evaluator roles because of it.
+   evaluator roles because of it. For a big run, have the judge emit its findings as a
+   small **HTML report** — annotated diffs, findings ranked by severity — Principle 2's
+   format-follows-reader rule, applied where review attention matters most.
    And **green build+tests ≠ it renders**: when the UI matters, actually run the
    app and look. Keep a small **dev-seed script** that loads demo data so the app
    has something to show; then either hand the user exact run steps, or (with
@@ -1759,7 +1816,11 @@ don't have.
 14. **For work that outlives one context window, leave the progress log and task list a
     fresh session can pick up.** Anthropic's long-running-agent harness converged on the same shape as this
     kit's wiki discipline, plus three specifics worth copying for any multi-session
-    run: an append-only **progress log** (what happened, what's next), a
+    run: an append-only **progress log** (what happened, what's next) carrying a standing
+    **Deviations** heading (when an edge case forces a departure from the plan, take the
+    conservative option and record it there — Shihipar's implementation-notes practice; the
+    morning review reads Deviations first, because a deviation is where the plan's map met
+    the territory), a
     **machine-readable task list** whose only editable field is pass/fail status (scope
     discipline by structure — one feature at a time), and a fixed **preflight** at
     session start — read the git log, the progress log, the task list, *then* pick up

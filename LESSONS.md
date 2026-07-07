@@ -56,6 +56,17 @@ Two corollaries from operators:
   logical commits matter more with agents, not less — commit granularity *is* the human
   review surface — and why work that starts from your own spec is worth more than work
   the agent invented.
+- **Specification is the other half of the bottleneck** (Thariq Shihipar, Anthropic's
+  Claude Code team). As autonomy grows, failures shift from "the model couldn't do it" to
+  "you didn't say it": everything you hand the agent is a *map* of the work, the codebase
+  and its real constraints are the *territory*, and the gap is your *unknowns* — the worst
+  being the things so obvious to you that you never wrote them down. A stronger model
+  raises the price of a bad map rather than removing the need for one, because it executes
+  an unstated assumption thoroughly and its failures are quiet. The working answer is to
+  spend cheap, early moves discovering unknowns before they get expensive — have the agent
+  interview *you* before it plans, prototype the ambiguous part, ask for a blindspot pass
+  in a domain you don't know — and when the agent does something reasonable-but-wrong,
+  fix the map (the instruction file, the skill), not just the output.
 
 **For the skeptic, this is the pivotal lesson:** nothing here asks you to trust the model.
 It asks you to build the same machinery you'd build around fallible humans — code review,

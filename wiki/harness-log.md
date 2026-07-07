@@ -57,6 +57,155 @@ risk tier · free-text **origin** — with no ROADMAP/maintainer fields, because
 
 ---
 
+## 2026-07-07 — Pre-kickoff hardening: context-discipline header + settings.local audit check + two map hooks
+
+- **Change.** Four follow-ons from the same review, at the maintainer's prompting. **(1)** A
+  **context-discipline block** in the kickoff header: the executing session drives from the
+  Quick Checklist and pulls sections on demand instead of holding all ~32K tokens resident —
+  skip the appendix unless relevant, defer Part 3 until fan-out, and end on
+  `kit-conformance.sh`, not a self-report. The kit's context-is-a-budget doctrine, finally
+  applied to the kit (the fable synthesis's item-5 critique, addressed at the cheap end).
+  **(2)** `claude-audit-base.sh` now validates **`.claude/settings.local.json`** (strict-JSON,
+  WARN if present-but-unloadable) — closing the "no check covers settings.local.json" gap named
+  in the templates-landmine entry below; both the WARN and PASS paths proven on a fixture.
+  **(3)** §1.7: when the spec arrives, run Principle 6's interview **on the spec** before
+  building. **(4)** Part 3.14's progress log gains a standing **Deviations** heading
+  (conservative choice + why; the morning review reads it first).
+- **Rationale (the bet).** (1) trades a header paragraph for most of the driver/teaching-split
+  benefit without creating a second document that could contradict the first (the kit's own
+  conflicting-docs failure mode — the reason NOT to ship a separate runbook yet). (2) is the
+  only machine-checkable home that gap has: the file is per-machine and gitignored, so only a
+  locally-run audit can honestly own it.
+- **What it replaced.** (1) is the cheap alternative to the full driver/teaching split, which
+  stays open as the structural fix if checklist-driven execution proves insufficient in
+  practice.
+- **Shelf-life/risk class.** (1) **depreciating** (a context-window or skill-loading change can
+  moot it); (2) depreciating with §9.1 (reverses if JSONC ships); (3)/(4) **appreciating** (map
+  discipline gains value with autonomy).
+- **Related ROADMAP item.** Fable-synthesis item 5 (split driver from teaching) — partially
+  addressed, cheap end; §9.1's class for (2).
+- **Commit.** *(this change + log entry)*
+- **Signal to watch.** Does a checklist-driven kickoff actually skip the deferred sections (watch
+  a real run), and does conformance catch what the skipping misses? If sections still get missed,
+  build the real per-tier runbook — generated from this guide, never hand-maintained beside it.
+- **Retrospect.** *(open — revisit at the next maintenance moment.)*
+
+---
+
+## 2026-07-07 — Verification-sweep hygiene: the kit's own CI pin + inventory gaps + dead vars
+
+- **Change.** Four small fixes from a mechanical verification pass (scripts executed in a scratch
+  copy; all 122 markdown links checked — zero broken; all count-claims spot-checked — accurate).
+  **(1)** `.github/workflows/selftest.yml` used `actions/checkout@v4` (a moving tag) while
+  `wiki/harness-manifest.md` claimed it SHA-pinned ("verified 2026-07-06" — a false row in the
+  freshness ledger) and the kit's own §1.3b doctrine requires the pin; now pinned to the same
+  verified v4.3.1 SHA `templates/ci-audit.yml` ships, which makes the manifest row true again.
+  **(2)** README's "What's in here" inventory ("each file is labeled") omitted two real files —
+  `scripts/kit-conformance.sh` (the adoption verifier, taught at §1.6c) and `glossary.md`; both
+  added. **(3)** Dead `TMP=` assignments removed from `kit-conformance.sh` and
+  `harness-metrics.sh` (shellcheck SC2034; assigned, never read — `claude-audit-base.sh`'s is
+  real and kept). **(4)** One stale line-cite in `claude-audit-base.sh` (§1.5 "On names"
+  `:733-734` → `:764-765`). Known-and-left: line-number cites inside dated wiki/ROADMAP entries
+  have drifted as files grew — section anchors all still resolve, so they're imprecise, not
+  misleading; not worth rewriting history entries over.
+- **Rationale (the bet).** (1) is the only load-bearing one: a freshness ledger with a false
+  "verified" row is the confident-lie failure the kit exists to prevent, in the kit's own
+  manifest. The rest is inventory honesty and dead-code hygiene.
+- **What it replaced.** Nothing structural.
+- **Shelf-life/risk class.** Permanent (the pin + the inventory are property-of-the-artifact
+  fixes).
+- **Related ROADMAP item.** §9.1's class; the manifest row is item **W**'s discipline enforced.
+- **Commit.** *(this change + log entry)*
+- **Signal to watch.** Line-cite drift keeps recurring — if it bites someone, the durable fix is
+  a cheap "does `file:N` still contain its quoted anchor" self-check, not more hand-repair.
+- **Retrospect.** *(open — revisit at the next maintenance moment.)*
+
+---
+
+## 2026-07-07 — Two landmines defused in the templates: the JSONC example + the sandbox-off-but-green checklist
+
+- **Change.** Two fixes in `templates/`, found during a pre-kickoff review. **(1)**
+  `templates/README.md` claimed *"these templates ship comment-free"* while
+  `project.settings.local.json.example` is JSONC throughout, and its install step 3 said "copy to
+  `.claude/settings.local.json`" with no strip instruction — a verbatim copy produces a file
+  Claude Code **silently drops whole** (the §9.1 mechanic, shipped by the kit's own template), and
+  **no shipped check covers `settings.local.json`**. Fixed: corrected the README claim (named the
+  `.example` as the deliberate JSONC exception), added the strip-every-`//`-line instruction to
+  step 3, and put a loud 4-line warning banner at the top of the example itself. **(2)** The
+  README's step-5 "verify it bites" checklist (secret read, `.env`, force-push, bypass) **passes
+  entirely on permission denies with the OS sandbox off** — a user who skipped Part 0 (whose
+  per-repo sandbox enable ships commented out in that same example) runs the whole checklist
+  green while "the only true wall" is down. Fixed: added the out-of-project write probe
+  (`touch ~/Downloads/…` → blocked) to step 5, named as the only check on the list that proves
+  the sandbox itself.
+- **Rationale (the bet).** Both are the kit's own doctrines violated by its own install path:
+  §9.1 ("a comment silently voids the file") shipped as a template you're told to copy, and
+  "a rule that's present but inert reads as protection" (Part 0) built into the canonical
+  bite-test list. The checklist fix matters more: it converts a false-green into a real signal
+  for exactly the deadline user most likely to have skipped Part 0.
+- **What it replaced.** Doc-layer fixes only; no script changes. A standing gap remains and is
+  deliberately **not** patched here: no verifier parses `settings.local.json` (it's per-machine
+  and gitignored, so neither the audit nor conformance can honestly own it) — the banner + strip
+  instruction are the mitigation until someone designs a check that can.
+- **Shelf-life/risk class.** **Depreciating** — both fixes exist because of CC 2.1.201's
+  strict-JSON behavior (JSONC support is anthropics/claude-code#17968; if it ships, the banner
+  and strip-step reverse — item Y's re-check catches that) and the current Bash-only sandbox
+  scope.
+- **Related ROADMAP item.** §9.1's class (verified-mechanics claims); adjacent to the closed
+  §9.2 managed-floor-silent-SKIP finding.
+- **Commit.** *(this change + log entry)*
+- **Signal to watch.** Does anyone still land with a void `settings.local.json` (the banner
+  unread)? Does the `~/Downloads` probe ever catch a real sandbox-off state at a kickoff? If
+  JSONC ships upstream, retire the banner in the same pass that re-verifies §9.1.
+- **Retrospect.** *(open — revisit at the next maintenance moment.)*
+
+---
+
+## 2026-07-07 — The map/territory absorption: four Shihipar practices + attribution
+
+- **Change.** Absorbed four practices from Thariq Shihipar's *A Field Guide to Fable: Finding Your
+  Unknowns* (2026-07-03) and *The unreasonable effectiveness of HTML* (2026-05), at the
+  maintainer's direction: **(1) interview-before-plan** — a new lead bullet in **Principle 6**
+  (reverse interview + blindspot pass, run before the plan exists) plus a one-line hook in
+  **Part 3.3** (run it before freezing the brief); **(2) the two-reader change record** — a new
+  bullet in **Principle 4** (human section / agent section split for commit-or-PR bodies, with the
+  agent section feeding the wiki write-back); **(3) fix-the-map-not-just-the-output** — a new §1.6
+  safety-net bullet (a correction to *reasonable* work = a missing directive, not a bad output) +
+  a clause in the README's loop paragraph; **(4) format-follows-reader** — a new paragraph in
+  **Principle 2** (durable agent-read store stays markdown; ephemeral human-read surfaces earn
+  HTML) + a Part 3.8 clause (judge emits an HTML report on big runs). Also: a README bibliography
+  entry, a LESSONS.md Lesson-2 corollary ("specification is the other half of the bottleneck"),
+  and a sourced entry in `wiki/sources/operator-field-reports.md`.
+- **Rationale (the bet).** The kit was verification-heavy and specification-light: its verifiers
+  catch wrong *execution*, but a DoD or brief drawn on a bad map verifies the wrong work — and a
+  stronger model executes an unstated assumption thoroughly and quietly, so the gap grows with
+  autonomy. The unknowns discipline is the *directive-side* twin of the safety net: cheap, early
+  moves (an interview, a blindspot pass) that discover map gaps before they're expensive, and a
+  write-back trigger (reasonable-but-wrong) the bug-feed and run-feed both miss.
+- **What it replaced.** Nothing removed. Sharpenings of existing doctrine: Principle 6 planned
+  before it interviewed; Principle 4's "body explains the why" didn't name the two audiences;
+  Principle 2 routed knowledge by *place* but not by *format*; §1.6's feeds (bugs, runs) lacked
+  the corrections-to-reasonable-work feed the class-level bullet only grazed.
+- **Shelf-life/risk class.** Interview-before-plan + fix-the-map: **appreciating** (more autonomy
+  → higher price per unstated assumption). Two-reader record: **permanent** (two audiences is a
+  property of the artifact, not the model). Format-follows-reader: **depreciating at the edges**
+  (the ~100-line markdown-attention claim is one operator's self-report, and rendering surfaces
+  keep moving — re-check at tool upgrades; the markdown-for-the-durable-store half is permanent,
+  it's the reconcile requirement restated).
+- **Related ROADMAP item.** None assigned (maintainer-directed absorption); touches the territory
+  of **V** (reviewer capability) and **C** (post-mortem feeds).
+- **Commit.** *(this change + log entry)*
+- **Verification caveat.** The field-guide thread is fetch-blocked at its mirrors (403s); quotes
+  were cross-checked across three independent mirrors that agree verbatim — recorded as
+  **secondary-verified** in the sources page, one grade below the corpus norm.
+- **Signal to watch.** Does the interview actually fire before plans, or read as ceremony and get
+  skipped? Does the two-reader split survive contact with solo work (where the human section may
+  be dead weight)? Do HTML reports get *read* more than the markdown ones they replace — and does
+  anyone try to make one durable (the failure the Principle 2 line exists to stop)?
+- **Retrospect.** *(open — revisit at the next maintenance moment.)*
+
+---
+
 ## 2026-07-07 — Non-code companion track (item AA): a README mapping of principles that already travel
 
 - **Change.** Built item **AA** (second §10 backlog item) — and, like **Z** the turn before, building it

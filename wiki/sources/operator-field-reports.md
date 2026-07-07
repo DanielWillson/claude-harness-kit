@@ -2,7 +2,7 @@
 title: "Operator field reports (2025–2026)"
 type: source
 status: current
-updated: 2026-07-01
+updated: 2026-07-07
 verified: 2026-07-01
 code: [../../claude-project-kickoff.md, ../../llm-wiki-kickoff.md]
 related: ["[[anthropic-engineering]]", "[[skills-shortlist]]", "[[2026-07-audit-pass]]"]
@@ -23,6 +23,40 @@ scripts cut processing time ~40% and tokens ~75%. *"Optimizing for AI agents isn
 about AI. It's about removing ambiguity, eliminating redundancy, and making implicit
 knowledge explicit."* → the strongest independent measurement behind the kit's
 one-claim-one-home rule (`llm-wiki-kickoff.md` §2.9) and reconcile-against-code.
+
+**Thariq Shihipar (Anthropic, Claude Code team)** — two pieces, one thesis *(added
+2026-07-07; see verification note below)*:
+- *A Field Guide to Fable: Finding Your Unknowns* (2026-07-03, X thread): *"The map, a
+  representation of the work to be done, is my prompts and skills and context… The
+  territory is where the work needs to happen, the codebase, the real world, its actual
+  constraints"*; unknowns = the map/territory gap, in four Rumsfeld classes (the worst:
+  unknown-knowns — *"things so obvious to you that you don't bother writing them"*).
+  *"Reducing and planning for your unknowns ahead of time is the core skill of agent-style
+  programming."* Concrete practices: the **reverse interview** (*"ask me one question at a
+  time… prioritize questions where my answer would change architectural design"*), the
+  **blindspot pass**, implementation notes with a *Deviations* section, the **two-reader PR
+  description** (human section: screenshots/before-after/GIFs; agent section: dense minable
+  detail), post-implementation **quizzes**, and *"every explanation document, brainstorming
+  session, interview, prototype, and reference material is a low-cost way to discover
+  things you didn't know before the cost of fixing them becomes high."* → Principle 6
+  (interview-before-plan), Principle 4 (two-reader change record), §1.6 (fix-the-map),
+  Part 3.3.
+- *Using Claude Code: The unreasonable effectiveness of HTML* (2026-05,
+  <https://claude.com/blog/using-claude-code-the-unreasonable-effectiveness-of-html>):
+  humans stop reading markdown past ~100 lines; HTML buys density (tabs, SVG, annotated
+  diffs), shareability, and two-way interaction — self-described *"HTML maximalist"*
+  position, motivated by keeping the human genuinely in the loop. Simon Willison's caveat
+  (2026-05-08): format doesn't substitute for prompt precision. Counterpoint on record
+  (Kurtis Redux): HTML costs source-readability, diffability, reviewability — which is why
+  the kit scopes HTML to *ephemeral human-read surfaces* and keeps the durable store
+  markdown. → Principle 2 (format-follows-reader), Part 3.8.
+- **Verification note:** the claude.com post and Willison's commentary were fetched
+  directly 2026-07-07. The field-guide thread itself is behind fetch-blocking mirrors
+  (explainx.ai, rattibha both 403 automated fetches) — its quotes above were
+  cross-checked 2026-07-07 across three independent mirrors (HTX, note.com, startuphub)
+  that agree verbatim; treat as **secondary-verified**, one grade below this page's norm.
+  Companion commentary: <https://explainx.ai/blog/map-is-not-territory-fable-5-thariq-unknowns-2026>
+  and <https://explainx.ai/blog/unreasonable-effectiveness-html-claude-code-thariq-2026>.
 
 **Armin Ronacher** — three posts, one arc:
 - *Agentic Coding Recommendations* (2025-06-12, <https://lucumr.pocoo.org/2025/6/12/agentic-coding/>):
